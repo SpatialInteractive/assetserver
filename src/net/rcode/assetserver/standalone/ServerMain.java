@@ -39,6 +39,10 @@ public class ServerMain {
 		// Instantiate
 		server=new Server(sa);
 		
+		// Configure handlers
+		AssetServerHandler handler=new AssetServerHandler();
+		server.setHandler(handler);
+		
 		// Start
 		server.start();
 	}
