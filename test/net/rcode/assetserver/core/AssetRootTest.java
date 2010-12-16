@@ -5,6 +5,11 @@ import static org.junit.Assert.*;
 
 public class AssetRootTest {
 	private static class DummyMount extends AssetMount {
+
+		@Override
+		public AssetLocator resolve(String mountPath) {
+			return null;
+		}
 	}
 	
 	@Test

@@ -92,6 +92,18 @@ public class AssetRoot {
 	}
 	
 	/**
+	 * Fully resolve a full path to an AssetLocator
+	 * @param fullPath
+	 * @return AssetLocator or null
+	 */
+	public AssetLocator resolve(String fullPath) {
+		AssetPath assetPath=match(fullPath);
+		if (assetPath==null) return null;
+		
+		return assetPath.mount.resolve(assetPath.mountPath);
+	}
+	
+	/**
 	 * Match the given fullPath to an AssetPath representing the AssetMount and
 	 * mount point that the resource belongs to.  The returned AssetPath may be
 	 * further evaluated by applying it to the found mount.

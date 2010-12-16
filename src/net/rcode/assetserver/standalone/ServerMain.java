@@ -1,9 +1,13 @@
 package net.rcode.assetserver.standalone;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+
+import net.rcode.assetserver.core.AssetRoot;
+import net.rcode.assetserver.core.ResourceMount;
 
 import org.eclipse.jetty.server.Server;
 
@@ -40,7 +44,12 @@ public class ServerMain {
 		server=new Server(sa);
 		
 		// Configure handlers
+		AssetRoot root=new AssetRoot();
+		ResourceMount rootMount=new ResourceMount(new File("."));
+		root.add("/", rootMount);
+		
 		AssetServerHandler handler=new AssetServerHandler();
+		handler.setRoot(root);
 		server.setHandler(handler);
 		
 		// Start

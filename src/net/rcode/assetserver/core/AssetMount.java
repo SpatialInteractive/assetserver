@@ -9,4 +9,10 @@ package net.rcode.assetserver.core;
  */
 public abstract class AssetMount {
 
+	/**
+	 * Find an asset
+	 * @param mountPath
+	 * @return AssetLocator or null if not found
+	 */
+	public abstract AssetLocator resolve(String mountPath);
 }
