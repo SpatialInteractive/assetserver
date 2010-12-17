@@ -11,6 +11,8 @@ import net.rcode.assetserver.core.AssetRoot;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jetty handler for implementing the asset server
@@ -19,6 +21,8 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
  *
  */
 public class AssetServerHandler extends AbstractHandler {
+	private static final Logger logger=LoggerFactory.getLogger(AssetServerHandler.class);
+	
 	private AssetRoot root;
 	private boolean noCache=true;
 	
@@ -42,7 +46,7 @@ public class AssetServerHandler extends AbstractHandler {
 			HttpServletResponse response) throws IOException, ServletException {
 		if (root==null) {
 			// Not found
-			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			baseRequest.setHandled(false);
 			return;
 		}
 		
@@ -55,12 +59,14 @@ public class AssetServerHandler extends AbstractHandler {
 		} catch (IOException e) {
 			throw e;
 		} catch (Exception e) {
-			throw new ServletException("Error resolving request " + request.getRequestURI(), e);
+			logger.warn("Uncaught exception while processing request for " + request.getRequestURI(), e);
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Uncaught exception while processing request: " + e.getMessage());
+			return;
 		}
 		
 		if (locator==null) {
 			// Not found
-			response.sendError(HttpServletResponse.SC_NOT_FOUND);
+			baseRequest.setHandled(false);
 			return;
 		}
 		
@@ -73,6 +79,7 @@ public class AssetServerHandler extends AbstractHandler {
 			response.setCharacterEncoding(encoding);
 		}
 		
+		baseRequest.setHandled(true);
 		response.setStatus(200);
 		if (noCache) {
 			response.addHeader("Expires", "Fri, 30 Oct 1998 14:19:41 GMT");

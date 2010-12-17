@@ -8,6 +8,7 @@ import java.net.InetSocketAddress;
 
 import net.rcode.assetserver.core.AssetRoot;
 import net.rcode.assetserver.core.ResourceMount;
+import net.rcode.assetserver.core.StaticResourceHandler;
 
 import org.eclipse.jetty.server.Server;
 
@@ -45,8 +46,10 @@ public class ServerMain {
 		
 		// Configure handlers
 		AssetRoot root=new AssetRoot();
-		ResourceMount rootMount=new ResourceMount(new File("."));
+		ResourceMount rootMount=new ResourceMount(new File("testdata"));
 		root.add("/", rootMount);
+		
+		rootMount.addHandler("*", new StaticResourceHandler());
 		
 		AssetServerHandler handler=new AssetServerHandler();
 		handler.setRoot(root);

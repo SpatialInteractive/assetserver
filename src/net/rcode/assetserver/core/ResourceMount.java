@@ -85,12 +85,30 @@ public class ResourceMount extends AssetMount {
 		this.userExclusions = userExclusions;
 	}
 	
+	/**
+	 * Add a handler for the given namePattern.  Handlers added later have precedence.
+	 * @param namePattern
+	 * @param handler
+	 */
+	public void addHandler(NamePattern namePattern, ResourceHandler handler) {
+		handlers.addFirst(new HandlerEntry(namePattern, handler));
+	}
+	
+	/**
+	 * Add a handler that matches a single name glob.
+	 * @param namePattern
+	 * @param handler
+	 */
+	public void addHandler(String namePattern, ResourceHandler handler) {
+		addHandler(new NamePattern(namePattern).freeze(), handler);
+	}
+	
 	@Override
 	public AssetLocator resolve(AssetPath assetPath) throws Exception {
 		// Reconstruct the path using native directory separators so that we can
 		// do a string compare with a canonical path in order to determine correctness
 		// This will not work across symbolic links.
-		StringBuilder pathAccum=new StringBuilder(location.toString().length() + assetPath.getParameterString().length()+20);
+		StringBuilder pathAccum=new StringBuilder(location.toString().length() + assetPath.getPath().length() + 256);
 		pathAccum.append(location.toString());
 		for (String comp: assetPath.getPathComponents()) {
 			if (pathAccum.charAt(pathAccum.length()-1)!=File.separatorChar)

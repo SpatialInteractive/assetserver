@@ -56,9 +56,10 @@ public class NamePattern {
 		}
 	}
 
-	public void freeze() {
+	public NamePattern freeze() {
 		frozen=true;
 		compilePattern();
+		return this;
 	}
 	
 	public void include(String pattern) {
