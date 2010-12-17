@@ -2,6 +2,7 @@ package net.rcode.assetserver.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
 /**
  * Serves assets off of a directory on the file system.  This also serves
@@ -33,9 +34,34 @@ import java.io.IOException;
  */
 public class ResourceMount extends AssetMount {
 	/**
+	 * Name patterns that will be excluded by default if encountered
+	 */
+	private NamePattern defaultExclusions=NamePattern.DEFAULT_EXCLUDES;
+	
+	/**
+	 * Name patterns that will be excluded
+	 */
+	private NamePattern userExclusions;
+	
+	/**
 	 * The root location of this mount (canonicalized)
 	 */
 	private File location;
+	
+	/**
+	 * List of handlers to consult on how to serve a file.  LIFO order.
+	 */
+	private LinkedList<HandlerEntry> handlers=new LinkedList<ResourceMount.HandlerEntry>();
+	
+	private static class HandlerEntry {
+		public NamePattern pattern;
+		public ResourceHandler handler;
+		
+		public HandlerEntry(NamePattern pattern, ResourceHandler handler) {
+			this.pattern=pattern;
+			this.handler=handler;
+		}
+	}
 	
 	public ResourceMount(File location) throws IOException {
 		this.location=location.getCanonicalFile();
@@ -45,8 +71,75 @@ public class ResourceMount extends AssetMount {
 		return location;
 	}
 	
+	public NamePattern getDefaultExclusions() {
+		return defaultExclusions;
+	}
+	public void setDefaultExclusions(NamePattern defaultExclusions) {
+		this.defaultExclusions = defaultExclusions;
+	}
+	
+	public NamePattern getUserExclusions() {
+		return userExclusions;
+	}
+	public void setUserExclusions(NamePattern userExclusions) {
+		this.userExclusions = userExclusions;
+	}
+	
 	@Override
-	public AssetLocator resolve(String mountPath) {
-		return null;
+	public AssetLocator resolve(AssetPath assetPath) throws Exception {
+		// Reconstruct the path using native directory separators so that we can
+		// do a string compare with a canonical path in order to determine correctness
+		// This will not work across symbolic links.
+		StringBuilder pathAccum=new StringBuilder(location.toString().length() + assetPath.getParameterString().length()+20);
+		pathAccum.append(location.toString());
+		for (String comp: assetPath.getPathComponents()) {
+			if (pathAccum.charAt(pathAccum.length()-1)!=File.separatorChar)
+				pathAccum.append(File.separatorChar);
+			pathAccum.append(comp);
+		}
+		
+		String resolvedPath=pathAccum.toString();
+		File resolvedFile=new File(resolvedPath);
+		String canonicalPath=resolvedFile.getCanonicalPath();
+		if (!canonicalPath.equals(resolvedPath)) {
+			// The path resolved differently.  If it is just a case issue, then the paths
+			// are not the same
+			if (canonicalPath.equalsIgnoreCase(resolvedPath)) {
+				// Case mismatch
+				return null;
+			} else {
+				// Potentially crosses a symlink boundary - do an expensive step-by-step eval
+				// TODO
+				return null;
+			}
+		}
+		
+		// Validate that none of the path components contain names that are excluded
+		for (String comp: assetPath.getPathComponents()) {
+			if (defaultExclusions!=null && defaultExclusions.matches(comp)) return null;
+			if (userExclusions!=null && userExclusions.matches(comp)) return null;
+		}
+		
+		// If here, then resolvedFile is indeed a valid canonical file.  The only other thing
+		// to check is whether the file exists
+		if (!resolvedFile.isFile()) {
+			return null;
+		}
+		
+		// Ok.  It's a valid file.  Find a handler for it.
+		String baseName=assetPath.getBaseName();
+		ResourceHandler handler=null;
+		for (HandlerEntry entry: handlers) {
+			if (entry.pattern.matches(baseName)) {
+				// Found one
+				handler=entry.handler;
+				break;
+			}
+		}
+		
+		if (handler==null) return null;	// No handler
+		
+		AssetLocator locator=handler.accessResource(this, assetPath, resolvedFile);
+		return locator;
 	}
 }

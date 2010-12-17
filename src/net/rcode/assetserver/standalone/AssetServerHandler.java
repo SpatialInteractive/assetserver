@@ -46,7 +46,18 @@ public class AssetServerHandler extends AbstractHandler {
 			return;
 		}
 		
-		AssetLocator locator=root.resolve(request.getRequestURI());
+		AssetLocator locator;
+		
+		try {
+			locator=root.resolve(request.getRequestURI());
+		} catch (ServletException e) {
+			throw e;
+		} catch (IOException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new ServletException("Error resolving request " + request.getRequestURI(), e);
+		}
+		
 		if (locator==null) {
 			// Not found
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);

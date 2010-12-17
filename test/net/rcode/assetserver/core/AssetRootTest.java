@@ -7,7 +7,7 @@ public class AssetRootTest {
 	private static class DummyMount extends AssetMount {
 
 		@Override
-		public AssetLocator resolve(String mountPath) {
+		public AssetLocator resolve(AssetPath path) {
 			return null;
 		}
 	}

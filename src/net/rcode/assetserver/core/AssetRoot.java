@@ -1,5 +1,6 @@
 package net.rcode.assetserver.core;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,12 +96,13 @@ public class AssetRoot {
 	 * Fully resolve a full path to an AssetLocator
 	 * @param fullPath
 	 * @return AssetLocator or null
+	 * @throws IOException 
 	 */
-	public AssetLocator resolve(String fullPath) {
+	public AssetLocator resolve(String fullPath) throws Exception {
 		AssetPath assetPath=match(fullPath);
 		if (assetPath==null) return null;
 		
-		return assetPath.getMount().resolve(assetPath.getPath());
+		return assetPath.getMount().resolve(assetPath);
 	}
 	
 	/**
