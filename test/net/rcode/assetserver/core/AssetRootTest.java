@@ -31,9 +31,9 @@ public class AssetRootTest {
 		
 		match=root.match("/cdn/file.txt");
 		assertNotNull(match);
-		assertEquals(match.mount, m1);
-		assertEquals(match.mountPoint, "/cdn");
-		assertEquals(match.mountPath, "/file.txt");
+		assertEquals(match.getMount(), m1);
+		assertEquals(match.getMountPoint(), "/cdn");
+		assertEquals(match.getPath(), "/file.txt");
 	}
 	
 	@Test
@@ -52,21 +52,21 @@ public class AssetRootTest {
 
 		match=root.match("/cdn/");
 		assertNotNull(match);
-		assertEquals(match.mount, m1);
-		assertEquals(match.mountPoint, "/cdn");
-		assertEquals(match.mountPath, "/");
+		assertEquals(match.getMount(), m1);
+		assertEquals(match.getMountPoint(), "/cdn");
+		assertEquals(match.getPath(), "/");
 		
 		match=root.match("/cdn/file.txt");
 		assertNotNull(match);
-		assertEquals(match.mount, m1);
-		assertEquals(match.mountPoint, "/cdn");
-		assertEquals(match.mountPath, "/file.txt");
+		assertEquals(match.getMount(), m1);
+		assertEquals(match.getMountPoint(), "/cdn");
+		assertEquals(match.getPath(), "/file.txt");
 
 		match=root.match("/tools/afile.js");
 		assertNotNull(match);
-		assertEquals(match.mount, m2);
-		assertEquals(match.mountPoint, "/tools");
-		assertEquals(match.mountPath, "/afile.js");
+		assertEquals(match.getMount(), m2);
+		assertEquals(match.getMountPoint(), "/tools");
+		assertEquals(match.getPath(), "/afile.js");
 	}
 
 	@Test
@@ -80,27 +80,27 @@ public class AssetRootTest {
 		
 		match=root.match("/not/under/cdn");
 		assertNotNull(match);
-		assertEquals(m3, match.mount);
-		assertEquals(null, match.mountPoint);
-		assertEquals("/not/under/cdn", match.mountPath);
+		assertEquals(m3, match.getMount());
+		assertEquals(null, match.getMountPoint());
+		assertEquals("/not/under/cdn", match.getPath());
 
 		match=root.match("/cdn/");
 		assertNotNull(match);
-		assertEquals(match.mount, m1);
-		assertEquals(match.mountPoint, "/cdn");
-		assertEquals(match.mountPath, "/");
+		assertEquals(match.getMount(), m1);
+		assertEquals(match.getMountPoint(), "/cdn");
+		assertEquals(match.getPath(), "/");
 		
 		match=root.match("/cdn/file.txt");
 		assertNotNull(match);
-		assertEquals(match.mount, m1);
-		assertEquals(match.mountPoint, "/cdn");
-		assertEquals(match.mountPath, "/file.txt");
+		assertEquals(match.getMount(), m1);
+		assertEquals(match.getMountPoint(), "/cdn");
+		assertEquals(match.getPath(), "/file.txt");
 
 		match=root.match("/tools/afile.js");
 		assertNotNull(match);
-		assertEquals(match.mount, m2);
-		assertEquals(match.mountPoint, "/tools");
-		assertEquals(match.mountPath, "/afile.js");
+		assertEquals(match.getMount(), m2);
+		assertEquals(match.getMountPoint(), "/tools");
+		assertEquals(match.getPath(), "/afile.js");
 	}
 
 	@Test
@@ -112,8 +112,8 @@ public class AssetRootTest {
 		
 		match=root.match("/some/file.txt");
 		assertNotNull(match);
-		assertEquals(m1, match.mount);
-		assertEquals(null, match.mountPoint);
-		assertEquals("/some/file.txt", match.mountPath);
+		assertEquals(m1, match.getMount());
+		assertEquals(null, match.getMountPoint());
+		assertEquals("/some/file.txt", match.getPath());
 	}
 }

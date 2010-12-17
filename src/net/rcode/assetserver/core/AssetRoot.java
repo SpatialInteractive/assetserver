@@ -100,7 +100,7 @@ public class AssetRoot {
 		AssetPath assetPath=match(fullPath);
 		if (assetPath==null) return null;
 		
-		return assetPath.mount.resolve(assetPath.mountPath);
+		return assetPath.getMount().resolve(assetPath.getPath());
 	}
 	
 	/**
@@ -127,7 +127,9 @@ public class AssetRoot {
 			}
 			AssetMount mount=mountPoints.get(mountPoint);
 			if (mount!=null) {
-				return new AssetPath(mount, mountPoint, mountPath);
+				AssetPath path=new AssetPath(mount, mountPoint, mountPath);
+				if (!path.isValid()) return null;
+				else return path;
 			}
 		}
 		return null;
