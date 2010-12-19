@@ -1,4 +1,4 @@
-package net.rcode.assetserver.jsembed;
+package net.rcode.assetserver.ejs;
 
 import java.io.File;
 
@@ -18,7 +18,7 @@ import net.rcode.assetserver.core.ResourceMount;
  * @author stella
  *
  */
-public class JsEmbedResourceHandler implements ResourceHandler {
+public class EjsResourceHandler implements ResourceHandler {
 
 	@Override
 	public AssetLocator accessResource(ResourceMount owner,
