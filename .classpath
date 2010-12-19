@@ -12,6 +12,8 @@
 	<classpathentry kind="lib" path="lib/jetty/jetty-http-7.2.2.v20101205.jar"/>
 	<classpathentry kind="lib" path="lib/jetty/jetty-io-7.2.2.v20101205.jar"/>
 	<classpathentry kind="lib" path="lib/jetty/jetty-continuation-7.2.2.v20101205.jar"/>
+	<classpathentry kind="lib" path="lib/core/commons-lang3-3.0-beta.jar"/>
+	<classpathentry kind="lib" path="lib/core/commons-codec-1.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="bin"/>
