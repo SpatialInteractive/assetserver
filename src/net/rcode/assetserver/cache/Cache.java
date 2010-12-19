@@ -1,5 +1,7 @@
 package net.rcode.assetserver.cache;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -67,7 +69,7 @@ public class Cache {
 			File tempFile=File.createTempFile("temp", ".save", location);
 			FileOutputStream out=new FileOutputStream(tempFile);
 			try {
-				ObjectOutputStream oout=new ObjectOutputStream(out);
+				ObjectOutputStream oout=new ObjectOutputStream(new BufferedOutputStream(out));
 				// When we write, we put the identity first so that we can do
 				// quick checks of identity without reading the whole contents
 				// We then follow with the entry (which will output a shared
@@ -180,7 +182,7 @@ public class Cache {
 	private CacheIdentity readIdentityFrom(File file) throws IOException {
 		InputStream in=new FileInputStream(file);
 		try {
-			ObjectInputStream oin=new ObjectInputStream(in);
+			ObjectInputStream oin=new ObjectInputStream(new BufferedInputStream(in));
 			Object ret;
 			try {
 				// Just read the first object from the stream
@@ -211,7 +213,7 @@ public class Cache {
 	private CacheEntry readFrom(File file) throws IOException {
 		InputStream in=new FileInputStream(file);
 		try {
-			ObjectInputStream oin=new ObjectInputStream(in);
+			ObjectInputStream oin=new ObjectInputStream(new BufferedInputStream(in));
 			Object ret;
 			try {
 				// Dummy read the identity object followed by the
