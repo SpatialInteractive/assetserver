@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.NativeJavaMethod;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -95,7 +96,7 @@ public class ShadowScope {
 
 		@Override
 		public Object getDefaultValue(Class<?> hint) {
-			return replace(super.getDefaultValue(hint));
+			return replace(delegate.getDefaultValue(hint));
 		}
 	}
 	
@@ -108,6 +109,15 @@ public class ShadowScope {
 		@Override
 		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
 				Object[] args) {
+			// Unwrap the this pointer before invoking.  Native
+			// methods get tricked out if there "this" is not precisely
+			// what was expected.
+			if (delegate instanceof NativeJavaMethod) {
+				if (thisObj instanceof ShadowScriptable) {
+					thisObj=((ShadowScriptable)thisObj).delegate;
+				}
+			}
+			
 			return ((Function)delegate).call(cx, scope, thisObj, args);
 		}
 

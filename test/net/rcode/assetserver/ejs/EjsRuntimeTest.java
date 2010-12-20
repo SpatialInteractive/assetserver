@@ -1,18 +1,18 @@
 package net.rcode.assetserver.ejs;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.Test;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
-import org.mozilla.javascript.ScriptableObject;
 
 public class EjsRuntimeTest {
 	@Test
 	public void testDoesntWrite() {
 		EjsRuntime runtime=new EjsRuntime(true);	// Seal it so we get exceptions on write
 		
-		Context cx=Context.enter();
+		Context cx=runtime.enter();
 		Scriptable scope=runtime.createRuntimeScope();
 		//Scriptable scope=runtime.getSharedScope();
 		
@@ -52,18 +52,38 @@ public class EjsRuntimeTest {
 					"", 1, null);
 			assertEquals("Testing", check.toString());
 
-			// Enumerate Object.prototype methods
-			/*
-			cx.evaluateString(scope, 
-					"props=[]; for (var k in Math) props.push(k); props.sort(); propString=props.join(',');", 
-					"", 1, null);
-			check=cx.evaluateString(scope, 
-					"propString", 
-					"", 1, null);
-			System.out.println("Props: " + check);
-			*/
 		} finally {
-			Context.exit();
+			runtime.exit();
 		}
+	}
+	
+	@Test
+	public void testStdLib() {
+		EjsRuntime runtime=new EjsRuntime();
+		runtime.loadLibraryStd();
+		
+		EjsRuntime.Instance instance=runtime.createInstance();
+		Object check;
+		
+		// Check String.prototype additions
+		check=instance.evaluate("'string with a \\r\\'\"'.toJs()");
+		assertEquals("string with a \\r\\'\\\"", check.toString());
+		
+		check=instance.evaluate("'java string \"'.toJava()");
+		assertEquals("java string \\\"", check.toString());
+		
+		check=instance.evaluate("'some <html id=\"test\" />'.toHtml()");
+		assertEquals("some &lt;html id=&quot;test&quot; /&gt;", check.toString());
+
+		check=instance.evaluate("'some <html id=\"test\" />'.toXml()");
+		assertEquals("some &lt;html id=&quot;test&quot; /&gt;", check.toString());
+
+		//System.out.println("" + check);
+		
+		// Check logging
+		instance.evaluate("logger.debug('Debug log message')");
+		instance.evaluate("logger.info('Info log message')");
+		instance.evaluate("logger.warn('Debug log message')");
+		instance.evaluate("logger.error('error log message', new Error('Exception'))");
 	}
 }
