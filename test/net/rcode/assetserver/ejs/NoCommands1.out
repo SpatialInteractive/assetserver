@@ -1,0 +1,1 @@
+{Literal(1,0,117)='This is a file\nwith no special directives.\nIt should produce one Literal with a start line of 1 and an end line of 3.'}
