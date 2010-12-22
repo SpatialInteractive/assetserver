@@ -26,6 +26,15 @@ public class EjsParserTest {
 		verifyParseStream("EjsDisable2");
 	}
 	
+	@Test
+	public void testEjsEscapes() {
+		verifyParseStream("EjsEscape1");
+	}
+	
+	@Test
+	public void testMain() {
+		verifyParseStream("Main1");
+	}
 	
 	private void verifyParseStream(String resourceName) {
 		CharSequence contents=IOUtil.slurpResource(getClass(), resourceName + ".ejs");
@@ -59,7 +68,7 @@ public class EjsParserTest {
 				.append(location.getSourceEnd())
 				.append(")='")
 				.append(StringEscapeUtils.escapeJava(text.toString()))
-				.append("'}");
+				.append("'}\n");
 		}
 
 		@Override
@@ -67,8 +76,9 @@ public class EjsParserTest {
 			message.append("{Block(").append(location.getLineStart())
 				.append(",").append(location.getSourceStart()).append(",")
 				.append(location.getSourceEnd())
+			.append(")='")
 			.append(StringEscapeUtils.escapeJava(script.toString()))
-			.append("'}");
+			.append("'}\n");
 		}
 
 		@Override
@@ -78,7 +88,7 @@ public class EjsParserTest {
 				.append(",").append(location.getSourceStart()).append(",")
 				.append(location.getSourceEnd())
 			.append(StringEscapeUtils.escapeJava(script.toString()))
-			.append("'}");
+			.append("'}\n");
 		}
 		
 	}

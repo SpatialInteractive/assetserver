@@ -1,0 +1,1 @@
+{Literal(1,0,121)='This file has top level directive escapes.  The following should\nescape properly\n##EJSON\nSome intervening\n##EJSDISABLE\n'}

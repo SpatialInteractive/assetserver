@@ -1,0 +1,21 @@
+Main mode parsing
+##EJSON
+Parser is now on
+
+##SingleLineDirective()
+some text
+##function test() {
+##  log(1);
+##}
+some more text
+This contains #{an.interpolation()}
+in the text
+The following are some escape sequences
+###escaped directive
+And here is ##{an.interpolation()}
+
+Finally, turn the parser off
+##EJSOFF
+And see that everything ignores #{interpolations}
+and
+##directives

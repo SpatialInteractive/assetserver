@@ -80,11 +80,16 @@ import java.util.regex.Pattern;
 public class EjsParser {
 
 	public static class LocationInfo {
+		private CharSequence source;
 		private int lineStart;
 		private int sourceStart;
 		private int sourceEnd;
 		
 		public LocationInfo() {
+		}
+		
+		public CharSequence getSource() {
+			return source;
 		}
 		
 		public int getLineStart() {
@@ -148,7 +153,7 @@ public class EjsParser {
 	 * </ul>
 	 */
 	private static final Pattern P_COMMANDTOP=Pattern.compile(
-			"^\\s*\\#\\#(\\#?)(EJSON|EJSDISABLE)\\s*$", Pattern.MULTILINE|Pattern.UNIX_LINES);
+			"^[\\p{Space}&&[^\\n]]*\\#\\#(\\#?)(EJSON|EJSDISABLE)[\\p{Space}&&[^\\n]]*$", Pattern.MULTILINE|Pattern.UNIX_LINES);
 	
 	/**
 	 * In normal scanning mode, matches a non-escaped introductory sequence.
@@ -172,7 +177,29 @@ public class EjsParser {
 	 * it starts with two pound signs, then it is an escape.
 	 */
 	private static final Pattern P_INTRO=Pattern.compile(
-			"(?:^\\s*(\\#?\\#\\#\\=?))|(\\#?\\#\\{)", Pattern.MULTILINE|Pattern.UNIX_LINES);
+			"(?:^[\\p{Space}&&[^\\n]]*(\\#?\\#\\#\\=?))|(\\#?\\#\\{)", Pattern.MULTILINE|Pattern.UNIX_LINES);
+	
+	/**
+	 * Match all main mode commands, potentially surrounded by spaces.
+	 * Group(1) is the matched text.
+	 */
+	private static final Pattern P_CMD_MAIN=Pattern.compile(
+			"\\s*(EJSON|EJSOFF|EJSDISABLE)\\s*");
+	
+	/**
+	 * Match a single line directive start.  Used for seeing if a run
+	 * of directives should be considered the same block
+	 */
+	private static final Pattern P_DIRECTIVE_START=Pattern.compile(
+			"\\s*\\#\\#(?!\\#)"
+			);
+	
+	/**
+	 * Match a block end sequence (does not match trailing newline)
+	 */
+	private static final Pattern P_BLOCK_END=Pattern.compile(
+			"^[\\p{Space}&&[^\\n]]*\\#\\#\\=[\\p{Space}&&[^\\n]]*$",
+			Pattern.MULTILINE|Pattern.UNIX_LINES);
 	
 	public EjsParser(Events events) {
 		this.events=events;
@@ -225,11 +252,32 @@ public class EjsParser {
 		resetBuffer();
 	}
 	
+	private void dumpBufferAsBlock() {
+		if (buffer.length()>0) {
+			location.sourceEnd=position;
+			events.handleBlock(buffer, location);
+		}
+		resetBuffer();
+	}
+	
+	/**
+	 * @param start
+	 * @return The index of the next line terminator or the end of stream
+	 */
+	private int findLineEnd(int start) {
+		while (start<source.length()) {
+			if (source.charAt(start)=='\n') return start;
+			start+=1;
+		}
+		return start;
+	}
+	
 	/**
 	 * Initiate a parse of the given CharSequence
 	 * @param source
 	 */
 	public void parse(CharSequence source) {
+		this.location.source=source;
 		this.source=source;
 		this.matcher=P_COMMANDTOP.matcher(source);
 		
@@ -258,17 +306,22 @@ public class EjsParser {
 					// Note that the way that the pattern is constructed,
 					// the match will never contain a line terminator, so
 					// we don't add to lines.  Splice out the escaped character.
+					
+					// Output stuff before the match
+					buffer.append(source, position, matcher.start());
+					
+					// Output sliced match
 					buffer.append(source, matcher.start(), matcher.start(1));
 					buffer.append(source, matcher.end(1), matcher.end());
 					position=matcher.end();
 				} else {
 					// Append the bit before the match as literal
 					buffer.append(source, position, matcher.start());
+					incrementLine(position, matcher.start());
 					position=matcher.end();
 					dumpBufferAsLiteral();
 					
 					// Increment line numbers past match
-					incrementLine(position, matcher.start());
 					chomp();	// Pattern does not grab the trailing new line
 					
 					resetBuffer();	// Catch the line number advancement
@@ -308,8 +361,186 @@ public class EjsParser {
 	 * is encountered.  EJSDISABLE commands are handled internal to this method
 	 */
 	protected void parseStateMain() {
-		// TODO Auto-generated method stub
+		resetBuffer();
 		
+		for (;;) {
+			if (position>=source.length()) break;
+			matcher.usePattern(P_INTRO);
+			if (!matcher.find(position)) break;
+			
+			// Output all earlier literal stuff
+			buffer.append(source, position, matcher.start());
+			incrementLine(position, matcher.start());
+			position=matcher.start();
+			dumpBufferAsLiteral();
+			
+			// Branch based on line directive or interpolation
+			String lineStart=matcher.group(1), interpStart=matcher.group(2);
+			if (lineStart!=null && !lineStart.isEmpty()) {
+				// It is a single line directive
+				if (lineStart.startsWith("###")) {
+					// It is a single line escape
+					buffer.append(lineStart.substring(1));	// Skip first char and add as literal
+					position=matcher.end();
+					continue;
+				}
+				
+				// Need to get the full first line to process commands
+				if (lineStart.equals("##")) {
+					int lineEnd=findLineEnd(matcher.end());
+					CharSequence commandCheck=source.subSequence(matcher.end(), lineEnd);
+					Matcher commandMatcher=P_CMD_MAIN.matcher(commandCheck);
+					if (commandMatcher.matches()) {
+						position=lineEnd;
+						String command=commandMatcher.group(1);
+						// Process as command
+						if ("EJSOFF".equals(command)) {
+							// Just return to top level
+							return;
+						} else if ("EJSDISABLE".equals(command)) {
+							// Output all remaining as literal and return
+							resetBuffer();
+							buffer.append(source, position, source.length());
+							dumpBufferAsLiteral();
+							position=source.length();
+							return;
+						} else if ("EJSON".equals(command)) {
+							// Do nothing.  This is a no-op b/c already on
+							continue;
+						} else {
+							throw new IllegalStateException("Unrecognized main mode command " + command);
+						}
+					} else {
+						// Process as run of single line directives
+						parseSingleLineDirectives(lineStart, matcher.end());
+					}
+				} else if (lineStart.equals("##=")) {
+					// Process as delimitted block
+					parseDelimetedBlock(lineStart, matcher.end());
+				}
+			} else if (interpStart!=null && !interpStart.isEmpty()){
+				// It is an interpolation
+				if (interpStart.startsWith("##")) {
+					// Process escape sequence
+					buffer.append(interpStart.substring(1));	// Skip first char and add as literal
+					position=matcher.end();
+					continue;
+				}
+				
+				parseInterpolation(interpStart, matcher.end());
+			} else {
+				throw new RuntimeException("Match error.  Unexpected parse state.");
+			}
+		}
+	}
+
+	/**
+	 * Parse a run of single line directives, leaving the position at the first
+	 * character following the last single line directive in the run.
+	 * @param startToken The token that started the sequence (##)
+	 * @param end The index immediately following the startToken
+	 */
+	private void parseSingleLineDirectives(String startToken, int start) {
+		// Accumulate all directive lines into the buffer for output
+		position=start;
+		resetBuffer();
+		
+		for (;;) {
+			int lineEnd=findLineEnd(start);
+			buffer.append(source, start, lineEnd);
+			buffer.append('\n');
+			
+			// Advance and accumulate line ending
+			position=lineEnd;
+			chomp();
+			
+			// See if the next line is a directive (and not a command)
+			Matcher directiveMatcher=P_DIRECTIVE_START.matcher(source);
+			directiveMatcher.region(position, source.length());
+			if (directiveMatcher.lookingAt()) {
+				startToken=directiveMatcher.group();
+				start=directiveMatcher.end();	
+				// Note that this matcher has a region set so need to add the offset
+				
+				// Make sure it is not a command
+				lineEnd=findLineEnd(start);
+				Matcher commandMatcher=P_CMD_MAIN.matcher(source.subSequence(start, lineEnd));
+				if (commandMatcher.matches()) {
+					// Break out and let the main parser handle it
+					break;
+				} else {
+					// Continue and append this next line
+					continue;
+				}
+			} else {
+				// Nothing further in the run
+				break;
+			}
+		}
+		
+		dumpBufferAsBlock();
+	}
+
+	/**
+	 * Parse a delimitted block.
+	 * @param startToken The token that started the block (##=)
+	 * @param start The index immediately following the start token
+	 */
+	private void parseDelimetedBlock(String startToken, int start) {
+		resetBuffer();
+		matcher.usePattern(P_BLOCK_END);
+		int blockEnd;
+		if (matcher.find(start)) {
+			blockEnd=matcher.start();
+			position=matcher.end();
+			chomp();
+		} else {
+			// It is the rest of the stream
+			blockEnd=source.length();
+			position=source.length();
+		}
+		
+		incrementLine(start, blockEnd);
+		buffer.append(source, start, blockEnd);
+		dumpBufferAsBlock();
+	}
+
+	/**
+	 * Parse an interpolation sequence.  startToken is the string that started
+	 * the interpolation (#{).  start is the index of the first character after
+	 * the start token in the source.  This must set the position to the character
+	 * following the interpolation.
+	 * @param interpStart
+	 * @param end
+	 */
+	private void parseInterpolation(String startToken, int start) {
+		resetBuffer();
+		int end=scanForInterpolationEnd(start);
+		
+		incrementLine(start, end);
+		buffer.append(source, start, end);
+		dumpBufferAsBlock();
+	}
+
+	/**
+	 * Position the stream after the interpolation end sequence, returning the
+	 * index of the end sequence (or end of stream if no end sequence found).
+	 * @param start
+	 * @return
+	 */
+	private int scanForInterpolationEnd(int start) {
+		// TODO: This needs to account for string literals and brace balancing
+		while (start<source.length()) {
+			if (source.charAt(start)=='}') {
+				position=start+1;
+				return start;
+			}
+			start+=1;
+		}
+		
+		// End of stream
+		position=source.length();
+		return position;
 	}
 
 
