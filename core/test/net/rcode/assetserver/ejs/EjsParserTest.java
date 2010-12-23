@@ -54,7 +54,15 @@ public class EjsParserTest {
 			fail("No expected output for " + resourceName);
 		}
 		
-		assertEquals(resourceName, expectedStream.toString(), events.message.toString());
+		String expectedStreamStr=expectedStream.toString(),
+			messagesStr=events.message.toString();
+		if (!expectedStreamStr.equals(messagesStr)) {
+			System.out.println("Output did not match expectations for " + resourceName + ". Actual follows:");
+			System.out.println("----");
+			System.out.print(messagesStr);
+			System.out.println("---");
+		}
+		assertEquals(resourceName, expectedStreamStr, messagesStr);
 	}
 
 
@@ -87,6 +95,7 @@ public class EjsParserTest {
 			message.append("{Interpolation(").append(location.getLineStart())
 				.append(",").append(location.getSourceStart()).append(",")
 				.append(location.getSourceEnd())
+				.append(")='")
 			.append(StringEscapeUtils.escapeJava(script.toString()))
 			.append("'}\n");
 		}

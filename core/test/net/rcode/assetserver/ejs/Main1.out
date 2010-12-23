@@ -4,7 +4,7 @@
 {Literal(6,68,78)='some text\n'}
 {Block(7,80,114)='function test() {\n  log(1);\n}\n'}
 {Literal(10,114,143)='some more text\nThis contains '}
-{Block(11,143,164)='an.interpolation()'}
+{Interpolation(11,143,164)='an.interpolation()'}
 {Literal(11,164,217)='\nin the text\nThe following are some escape sequences\n'}
 {Literal(14,217,250)='##escaped directive\nAnd here is '}
 {Literal(15,250,303)='#{an.interpolation()}\n\nFinally, turn the parser off\n'}

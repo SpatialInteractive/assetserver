@@ -1,0 +1,155 @@
+<project name="assetserver" default="jar">
+	<property name="build.dir" location="build"/>
+	<property name="build.jar.dir" location="${build.dir}"/>
+	<property name="build.core.classes" location="${build.dir}/core/classes"/>
+	<property name="build.core.test" location="${build.dir}/core/test"/>
+	<property name="build.reports" location="${build.dir}/reports"/>
+	<property name="build.info" location="${build.core.classes}/net/rcode/assetserver/buildinfo.properties"/>
+	<property name="build.version" value="adhoc"/>
+	<property environment="env"/>
+	
+	<property name="jetty.version" value="7.2.2.v20101205"/>
+	
+<tstamp>
+	<format property="build.timestamp" pattern="yyyy-MM-dd'T'HH:mm:ssz"/>
+</tstamp>
+
+<target name="stamp">
+<exec executable="git" outputproperty="build.git.lastcommit" failifexecutionfails="false">
+	<arg value="rev-parse"/>
+	<arg value="HEAD"/>
+</exec>
+<exec executable="hostname" outputproperty="build.hostname" failifexecutionfails="false">
+	<arg value="-s"/>
+</exec>
+<echo file="${build.info}" append="false" encoding="UTF-8">#Buildtime settings
+build.timestamp=${build.timestamp}
+build.host=${build.hostname}
+build.lastcommit=${build.git.lastcommit}
+build.user=${user.name}
+build.version=${build.version}
+</echo>
+</target>
+
+	<property name="javac.source" value="1.5"/>
+	<property name="javac.target" value="1.5"/>
+	<property name="javac.debug" value="true"/>
+	<property name="javac.debuglevel" value="lines"/>
+	
+	<path id="core.classpath">
+		<fileset dir="lib">
+			<include name="core/slf4j-api-*.jar"/>
+			<include name="core/slf4j-jdk14-*.jar"/>
+			<include name="core/commons-lang3-*.jar"/>
+			<include name="core/commons-codec-*.jar"/>
+			<include name="core/js-*.jar"/>
+			
+			<include name="jetty/*.jar"/>
+		</fileset>
+	</path>
+	
+	<path id="test.classpath">
+		<fileset dir="lib">
+			<include name="junit-4.*.jar"/>
+		</fileset>
+	</path>
+	
+	<target name="-init">
+		<mkdir dir="${build.dir}"/>
+		<mkdir dir="${build.core.classes}"/>
+		<mkdir dir="${build.core.test}"/>
+		<mkdir dir="${build.reports}"/>
+	</target>
+	
+	<target name="clean">
+		<delete dir="${build.dir}"/>
+	</target>
+	
+	<target name="compile" depends="compile-core,stamp"/>
+	
+	<target name="compile-core" depends="-init">
+		<!-- Core Clases -->
+		<javac srcdir="core/src" 
+			destdir="${build.core.classes}"
+			includeantruntime="false"
+			encoding="UTF-8" debug="${javac.debug}" debuglevel="${javac.debuglevel}"
+			source="${javac.source}"
+			target="${javac.target}">
+			<classpath refid="core.classpath"/>
+		</javac>
+		<copy todir="${build.core.classes}">
+			<fileset dir="core/src">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		
+		<!-- Core Tests -->
+		<javac srcdir="core/test" 
+			destdir="${build.core.test}"
+			includeantruntime="false"
+			encoding="UTF-8" debug="${javac.debug}" debuglevel="${javac.debuglevel}"
+			source="${javac.source}"
+			target="${javac.target}">
+			<classpath>
+				<path refid="core.classpath"/>
+				<path refid="test.classpath"/>
+				<pathelement location="${build.core.classes}"/>
+			</classpath>
+		</javac>
+		<copy todir="${build.core.test}">
+			<fileset dir="core/test">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+	</target>
+	
+	
+	<target name="test" depends="test-core"/>
+	<target name="test-core" depends="compile-core">
+		<junit fork="yes" forkmode="once" printsummary="on"
+			haltonfailure="yes">
+			<classpath>
+				<path refid="core.classpath"/>
+				<path refid="test.classpath"/>
+				<pathelement location="${build.core.classes}"/>
+				<pathelement location="${build.core.test}"/>
+			</classpath>
+			
+			<batchtest todir="${build.reports}">
+				<fileset dir="${build.core.test}">
+					<include name="**/*Test.class"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
+	
+	<target name="jar" depends="compile">
+		<!-- Create just this library -->
+		<jar destfile="${build.jar.dir}/assetserver-core.jar">
+			<fileset dir="${build.core.classes}"/>
+		</jar>
+		
+		<!-- Create the executable -->
+		<jar destfile="${build.jar.dir}/assetserver-main.jar" index="true" indexMetaInf="true">
+			<manifest>
+				<attribute name="Main-Class" value="net.rcode.assetserver.standalone.ServerMain"/>
+			</manifest>
+			
+			<zipfileset prefix="lib/core" src="${build.jar.dir}/assetserver-core.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/core/slf4j-api-1.6.1.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/core/slf4j-jdk14-1.6.1.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/core/commons-lang3-3.0-beta.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/core/commons-codec-1.4.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/core/js-1.7R2.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-util-${jetty.version}.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-server-${jetty.version}.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-io-${jetty.version}.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-http-${jetty.version}.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-continuation-${jetty.version}.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/jetty/servlet-api-2.5.jar"/>
+			
+			<zipfileset prefix="lib/yuicompressor" src="lib/core/yuicompressor-2.4.2.jar"/>
+		</jar>
+			
+	</target>
+</project>
