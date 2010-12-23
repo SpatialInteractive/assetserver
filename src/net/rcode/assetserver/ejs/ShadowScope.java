@@ -131,6 +131,12 @@ public class ShadowScope {
 	public ShadowScope(Scriptable originalScope) {
 		this.originalScope=originalScope;
 		this.shadowScope=(Scriptable) replace(originalScope);
+		
+		// Various bits of Rhino depend on being able to traverse
+		// up the scope chain and then up the prototype chain to find
+		// the top-level scope.  The following doesn't hurt anything
+		// but ensures the appropriate inheritance hierarchy.
+		this.shadowScope.setPrototype(originalScope);
 	}
 	
 	public Scriptable getScope() {

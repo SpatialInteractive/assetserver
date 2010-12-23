@@ -9,6 +9,7 @@ import java.net.InetSocketAddress;
 import net.rcode.assetserver.core.AssetRoot;
 import net.rcode.assetserver.core.ResourceMount;
 import net.rcode.assetserver.core.StaticResourceHandler;
+import net.rcode.assetserver.ejs.EjsResourceHandler;
 
 import org.eclipse.jetty.server.Server;
 
@@ -49,7 +50,11 @@ public class ServerMain {
 		ResourceMount rootMount=new ResourceMount(new File("testdata"));
 		root.add("/", rootMount);
 		
+		EjsResourceHandler ejsHandler=new EjsResourceHandler();
 		rootMount.addHandler("*", new StaticResourceHandler());
+		rootMount.addHandler("*.html", ejsHandler);
+		rootMount.addHandler("*.js", ejsHandler);
+		rootMount.addHandler("*.css", ejsHandler);
 		
 		AssetServerHandler handler=new AssetServerHandler();
 		handler.setRoot(root);

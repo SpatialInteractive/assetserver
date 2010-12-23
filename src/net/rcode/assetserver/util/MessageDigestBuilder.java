@@ -32,7 +32,7 @@ public class MessageDigestBuilder {
 	}
 	
 	public byte[] getValue() {
-		if (value!=null) value=digest.digest();
+		if (value==null) value=digest.digest();
 		return value;
 	}
 	

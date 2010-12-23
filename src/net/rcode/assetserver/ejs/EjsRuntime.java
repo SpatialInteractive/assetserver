@@ -7,6 +7,7 @@ import java.io.Reader;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
+import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.slf4j.Logger;
@@ -53,6 +54,23 @@ public class EjsRuntime {
 			Context cx=enter();
 			try {
 				return cx.evaluateString(scope, source, null, 1, null);
+			} finally {
+				exit();
+			}
+		}
+		
+		/**
+		 * Create a JavaScript function that coerces its first argument
+		 * to a String and writes it to the appendable passed to this function
+		 * @param a
+		 * @return Function(value)
+		 */
+		public Function createAppendableAdapter(Appendable a) {
+			String src="function(appendable) { return function(value) { appendable.append(String(value)); } }";
+			Context cx=enter();
+			try {
+				return (Function) cx.compileFunction(scope, src, "", 1, null)
+					.call(cx, scope, null, new Object[] { a });
 			} finally {
 				exit();
 			}

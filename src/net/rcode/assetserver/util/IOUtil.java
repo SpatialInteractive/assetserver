@@ -1,5 +1,8 @@
 package net.rcode.assetserver.util;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,6 +16,18 @@ import java.io.Reader;
  *
  */
 public class IOUtil {
+	/**
+	 * Read an entire file in the given encoding
+	 * @param file
+	 * @param encoding
+	 * @return CharSequence
+	 * @throws IOException
+	 */
+	public static CharSequence slurpFile(File file, String encoding) throws IOException {
+		InputStream input=new FileInputStream(file);
+		return slurpStream(input, encoding, (int)file.length());
+	}
+	
 	/**
 	 * Read an entire Reader into a mutable CharSequence
 	 * @param in

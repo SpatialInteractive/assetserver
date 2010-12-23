@@ -260,6 +260,14 @@ public class EjsParser {
 		resetBuffer();
 	}
 	
+	private void dumpBufferAsInterpolation() {
+		if (buffer.length()>0) {
+			location.sourceEnd=position;
+			events.handleInterpolation(buffer, location);
+		}
+		resetBuffer();
+	}
+	
 	/**
 	 * @param start
 	 * @return The index of the next line terminator or the end of stream
@@ -519,7 +527,7 @@ public class EjsParser {
 		
 		incrementLine(start, end);
 		buffer.append(source, start, end);
-		dumpBufferAsBlock();
+		dumpBufferAsInterpolation();
 	}
 
 	/**

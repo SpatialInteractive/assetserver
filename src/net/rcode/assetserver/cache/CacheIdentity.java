@@ -29,7 +29,7 @@ public class CacheIdentity implements Serializable {
 	public String getExternalName() {
 		MessageDigestBuilder b=new MessageDigestBuilder("MD5");
 		b.append(handlerClassName);
-		b.append(mountPoint);
+		b.append(mountPoint!=null ? mountPoint : "");
 		b.append(path);
 		b.append(environmentRedux);
 		

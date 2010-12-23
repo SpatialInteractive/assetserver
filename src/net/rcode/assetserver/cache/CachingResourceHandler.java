@@ -67,10 +67,10 @@ public abstract class CachingResourceHandler implements ResourceHandler {
 				"");	// TODO: Add environment options redux
 		
 		CacheEntry entry=cache.lookup(identity);
-		if (entry!=null) return entry;
+		if (entry!=null && entry.isValid()) return entry;
 		
 		// No hit.  Generate.
-		entry=generateResource(owner, assetPath, physicalResource);
+		entry=generateResource(identity, owner, assetPath, physicalResource);
 		if (entry==null) return null;
 		
 		// Convert to a CacheEntry
@@ -86,7 +86,8 @@ public abstract class CachingResourceHandler implements ResourceHandler {
 	 * @return
 	 * @throws Exception
 	 */
-	protected abstract CacheEntry generateResource(ResourceMount owner,
+	protected abstract CacheEntry generateResource(CacheIdentity identity, 
+			ResourceMount owner,
 			AssetPath assetPath, File physicalResource) throws Exception;
 	
 	public File getCacheLocation() {
