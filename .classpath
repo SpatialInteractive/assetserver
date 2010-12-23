@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="src" path="core/src"/>
+	<classpathentry kind="src" path="core/test"/>
 	<classpathentry kind="lib" path="lib/core/gson-1.6.jar"/>
 	<classpathentry kind="lib" path="lib/core/js-1.7R2.jar" sourcepath="/Users/stella/Downloads/rhino1_7R2/src"/>
 	<classpathentry kind="lib" path="lib/core/slf4j-api-1.6.1.jar"/>
