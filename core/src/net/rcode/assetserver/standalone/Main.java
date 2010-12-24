@@ -4,6 +4,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -34,13 +39,16 @@ public class Main {
 		String CP="net.rcode.assetserver.standalone.";
 		commandClassNames.put("help", CP + "HelpCommand");
 		commandClassNames.put("version", CP + "VersionCommand");
+		commandClassNames.put("serve", CP + "ServeCommand");
 		
+		// Init option parser
 		overallParser=new OptionParser();
 	}
 	
 	public static void main(String[] args) throws Throwable {
 		// Initialize the overall option parser
 		initOnce();
+		resetLogging();
 		
 		// First split the command line into overall, command and command options
 		int i;
@@ -77,6 +85,23 @@ public class Main {
 		Class<?> commandClass=Class.forName(commandClassName, true, Main.class.getClassLoader());
 		MainCommand command=(MainCommand) commandClass.newInstance();
 		command.invoke(commandArgs);
+	}
+
+	/**
+	 * Remove all handlers from the root logger
+	 */
+	private static void resetLogging() {
+		Logger logger=LogManager.getLogManager().getLogger("");
+		Handler[] handlers=logger.getHandlers();
+		for (Handler handler: handlers) {
+			logger.removeHandler(handler);
+		}
+		
+		// Reset to warning level
+		logger.setLevel(Level.INFO);
+		ConsoleHandler handler=new ConsoleHandler();
+		handler.setFormatter(new DefaultFormatter());
+		logger.addHandler(handler);
 	}
 
 	static Class<?> getCommandClass(String commandName) throws ClassNotFoundException {
