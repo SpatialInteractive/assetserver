@@ -3,6 +3,8 @@
 	<property name="build.jar.dir" location="${build.dir}"/>
 	<property name="build.core.classes" location="${build.dir}/core/classes"/>
 	<property name="build.core.test" location="${build.dir}/core/test"/>
+	<property name="build.cphelp.classes" location="${build.dir}/cphelp/classes"/>
+	
 	<property name="build.reports" location="${build.dir}/reports"/>
 	<property name="build.info" location="${build.core.classes}/net/rcode/assetserver/buildinfo.properties"/>
 	<property name="build.version" value="adhoc"/>
@@ -58,6 +60,7 @@ build.version=${build.version}
 		<mkdir dir="${build.dir}"/>
 		<mkdir dir="${build.core.classes}"/>
 		<mkdir dir="${build.core.test}"/>
+		<mkdir dir="${build.cphelp.classes}"/>
 		<mkdir dir="${build.reports}"/>
 	</target>
 	
@@ -68,6 +71,20 @@ build.version=${build.version}
 	<target name="compile" depends="compile-core,stamp"/>
 	
 	<target name="compile-core" depends="-init">
+		<!-- Compile cphelp -->
+		<javac srcdir="cphelp/src" 
+			destdir="${build.cphelp.classes}"
+			includeantruntime="false"
+			encoding="UTF-8" debug="${javac.debug}" debuglevel="${javac.debuglevel}"
+			source="${javac.source}"
+			target="${javac.target}">
+		</javac>
+		<copy todir="${build.cphelp.classes}">
+			<fileset dir="cphelp/src">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		
 		<!-- Core Clases -->
 		<javac srcdir="core/src" 
 			destdir="${build.core.classes}"
@@ -75,7 +92,10 @@ build.version=${build.version}
 			encoding="UTF-8" debug="${javac.debug}" debuglevel="${javac.debuglevel}"
 			source="${javac.source}"
 			target="${javac.target}">
-			<classpath refid="core.classpath"/>
+			<classpath>
+				<pathelement location="${build.cphelp.classes}"/>
+				<path refid="core.classpath"/>
+			</classpath>
 		</javac>
 		<copy todir="${build.core.classes}">
 			<fileset dir="core/src">
@@ -91,9 +111,10 @@ build.version=${build.version}
 			source="${javac.source}"
 			target="${javac.target}">
 			<classpath>
+				<pathelement location="${build.cphelp.classes}"/>
+				<pathelement location="${build.core.classes}"/>
 				<path refid="core.classpath"/>
 				<path refid="test.classpath"/>
-				<pathelement location="${build.core.classes}"/>
 			</classpath>
 		</javac>
 		<copy todir="${build.core.test}">
@@ -132,8 +153,11 @@ build.version=${build.version}
 		<!-- Create the executable -->
 		<jar destfile="${build.jar.dir}/assetserver-main.jar" index="true" indexMetaInf="true">
 			<manifest>
-				<attribute name="Main-Class" value="net.rcode.assetserver.standalone.ServerMain"/>
+				<attribute name="Main-Class" value="net.rcode.cphelp.Main"/>
 			</manifest>
+			
+			<fileset dir="${build.cphelp.classes}"/>
+			<fileset dir="skeleton/assetserver-main"/>
 			
 			<zipfileset prefix="lib/core" src="${build.jar.dir}/assetserver-core.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/core/slf4j-api-1.6.1.jar"/>

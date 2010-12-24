@@ -10,6 +10,7 @@ import net.rcode.assetserver.core.AssetRoot;
 import net.rcode.assetserver.core.ResourceMount;
 import net.rcode.assetserver.core.StaticResourceHandler;
 import net.rcode.assetserver.ejs.EjsResourceHandler;
+import net.rcode.cphelp.LoaderLookup;
 
 import org.eclipse.jetty.server.Server;
 
