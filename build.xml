@@ -4,7 +4,8 @@
 	<property name="build.core.classes" location="${build.dir}/core/classes"/>
 	<property name="build.core.test" location="${build.dir}/core/test"/>
 	<property name="build.cphelp.classes" location="${build.dir}/cphelp/classes"/>
-	
+	<property name="build.tools.classes" location="${build.dir}/tools/classes"/>
+		
 	<property name="build.reports" location="${build.dir}/reports"/>
 	<property name="build.info" location="${build.core.classes}/net/rcode/assetserver/buildinfo.properties"/>
 	<property name="build.version" value="adhoc"/>
@@ -36,7 +37,7 @@ build.version=${build.version}
 	<property name="javac.source" value="1.5"/>
 	<property name="javac.target" value="1.5"/>
 	<property name="javac.debug" value="true"/>
-	<property name="javac.debuglevel" value="lines"/>
+	<property name="javac.debuglevel" value="lines,source"/>
 	
 	<path id="core.classpath">
 		<fileset dir="lib">
@@ -68,8 +69,30 @@ build.version=${build.version}
 		<delete dir="${build.dir}"/>
 	</target>
 	
-	<target name="compile" depends="compile-core,stamp"/>
+	<target name="-init-tools">
+		<mkdir dir="${build.tools.classes}"/>
+		<javac srcdir="tools/src" 
+			destdir="${build.tools.classes}"
+			includeantruntime="true"
+			encoding="UTF-8" debug="${javac.debug}" debuglevel="${javac.debuglevel}"
+			source="${javac.source}"
+			target="${javac.target}">
+		</javac>
+		<copy todir="${build.tools.classes}">
+			<fileset dir="tools/src">
+				<exclude name="**/*.java"/>
+			</fileset>
+		</copy>
+		
+		<!-- Define tasks -->
+		<taskdef name="jarexec" classname="net.rcode.buildtools.JarExecTask">
+			<classpath>
+				<pathelement location="${build.tools.classes}"/>
+			</classpath>
+		</taskdef>
+	</target>
 	
+	<target name="compile" depends="compile-core,stamp"/>
 	<target name="compile-core" depends="-init">
 		<!-- Compile cphelp -->
 		<javac srcdir="cphelp/src" 
@@ -144,7 +167,7 @@ build.version=${build.version}
 		</junit>
 	</target>
 	
-	<target name="jar" depends="compile">
+	<target name="jar" depends="compile,-init-tools">
 		<!-- Create just this library -->
 		<jar destfile="${build.jar.dir}/assetserver-core.jar">
 			<fileset dir="${build.core.classes}"/>
@@ -174,6 +197,9 @@ build.version=${build.version}
 			
 			<zipfileset prefix="lib/yuicompressor" src="lib/core/yuicompressor-2.4.2.jar"/>
 		</jar>
-			
+		
+		<!-- Create unixy self executor -->
+		<jarexec source="${build.jar.dir}/assetserver-main.jar" dest="${build.jar.dir}/assetserver"/>
+		
 	</target>
 </project>
