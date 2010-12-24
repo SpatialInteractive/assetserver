@@ -14,7 +14,7 @@
 	<property name="jetty.version" value="7.2.2.v20101205"/>
 	
 <tstamp>
-	<format property="build.timestamp" pattern="yyyy-MM-dd'T'HH:mm:ssz"/>
+	<format property="build.timestamp" pattern="yyyy-MM-dd HH:mm:ss z"/>
 </tstamp>
 
 <target name="stamp">
@@ -46,7 +46,8 @@ build.version=${build.version}
 			<include name="core/commons-lang3-*.jar"/>
 			<include name="core/commons-codec-*.jar"/>
 			<include name="core/js-*.jar"/>
-			
+			<include name="core/jopt-simple-*.jar"/>
+
 			<include name="jetty/*.jar"/>
 		</fileset>
 	</path>
@@ -167,7 +168,7 @@ build.version=${build.version}
 		</junit>
 	</target>
 	
-	<target name="jar" depends="compile,-init-tools">
+	<target name="jar" depends="compile,test,-init-tools">
 		<!-- Create just this library -->
 		<jar destfile="${build.jar.dir}/assetserver-core.jar">
 			<fileset dir="${build.core.classes}"/>
@@ -188,13 +189,13 @@ build.version=${build.version}
 			<zipfileset prefix="lib/depend" src="lib/core/commons-lang3-3.0-beta.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/core/commons-codec-1.4.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/core/js-1.7R2.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/core/jopt-simple-3.2.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-util-${jetty.version}.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-server-${jetty.version}.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-io-${jetty.version}.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-http-${jetty.version}.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-continuation-${jetty.version}.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/servlet-api-2.5.jar"/>
-			
 			<zipfileset prefix="lib/yuicompressor" src="lib/core/yuicompressor-2.4.2.jar"/>
 		</jar>
 		

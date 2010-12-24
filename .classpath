@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="core/src"/>
 	<classpathentry kind="src" path="core/test"/>
 	<classpathentry kind="src" path="cphelp/src"/>
-	<classpathentry kind="src" path="cphelp/test"/>
 	<classpathentry kind="src" path="tools/src"/>
 	<classpathentry kind="lib" path="lib/core/gson-1.6.jar"/>
 	<classpathentry kind="lib" path="lib/core/js-1.7R2.jar" sourcepath="/Users/stella/Downloads/rhino1_7R2/src"/>
@@ -18,6 +17,7 @@
 	<classpathentry kind="lib" path="lib/core/commons-lang3-3.0-beta.jar"/>
 	<classpathentry kind="lib" path="lib/core/commons-codec-1.4.jar"/>
 	<classpathentry kind="lib" path="lib/ant/ant.jar"/>
+	<classpathentry kind="lib" path="lib/core/jopt-simple-3.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="bin"/>
