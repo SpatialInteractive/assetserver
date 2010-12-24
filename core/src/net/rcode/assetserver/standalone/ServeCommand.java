@@ -69,7 +69,7 @@ public class ServeCommand extends MainCommand {
 		
 		// Print version banner
 		VersionInfo version=VersionInfo.INSTANCE;
-		System.err.println("Starting assetserver version " + version.getBuildVersion() +
+		AssetServer.logger.info("Starting assetserver version " + version.getBuildVersion() +
 				" (built at " + version.getBuildTime() + " on " + version.getBuildHost() + " by " + version.getBuildUser() + ")");
 		
 		// Setup
