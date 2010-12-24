@@ -8,7 +8,6 @@ public class DefaultFormatter extends Formatter {
 	@Override
 	public String format(LogRecord record) {
 		return record.getLevel().getName() +
-			" " + record.getMillis() +
 			" (" + record.getLoggerName() + "): " +
 			record.getMessage() + 
 			"\n";

@@ -20,8 +20,8 @@ import org.slf4j.LoggerFactory;
  * @author stella
  *
  */
-public class AssetServerHandler extends AbstractHandler {
-	private static final Logger logger=LoggerFactory.getLogger(AssetServerHandler.class);
+public class JettyHandler extends AbstractHandler {
+	private static final Logger logger=LoggerFactory.getLogger(JettyHandler.class);
 	
 	private AssetRoot root;
 	private boolean noCache=true;

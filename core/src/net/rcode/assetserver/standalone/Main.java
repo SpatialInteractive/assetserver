@@ -91,7 +91,9 @@ public class Main {
 	 * Remove all handlers from the root logger
 	 */
 	private static void resetLogging() {
-		Logger logger=LogManager.getLogManager().getLogger("");
+		LogManager logManager=LogManager.getLogManager();
+		
+		Logger logger=logManager.getLogger("");
 		Handler[] handlers=logger.getHandlers();
 		for (Handler handler: handlers) {
 			logger.removeHandler(handler);

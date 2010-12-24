@@ -1,6 +1,7 @@
 package net.rcode.assetserver.standalone;
 
-import java.io.PrintStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Implementations define valid commands.
@@ -10,10 +11,22 @@ import java.io.PrintStream;
  */
 public abstract class MainCommand {
 
+	public void syntaxError(String message) throws IOException {
+		PrintWriter out=new PrintWriter(System.err);
+		out.println("Syntax error: " + message);
+		out.println();
+		
+		usage(out);
+		out.flush();
+		
+		System.exit(1);
+	}
+	
 	/**
 	 * Override to print usage
+	 * @throws IOException 
 	 */
-	public boolean usage(PrintStream out) {
+	public boolean usage(PrintWriter out) throws IOException {
 		return false;
 	}
 	

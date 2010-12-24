@@ -1,0 +1,18 @@
+Starts an HTTP server to serve assets out of the given location.
+
+If the location is a file, then it is interpreted as an asconfig.js,
+which is responsible for setting up the server instance.
+
+If the location names a directory, then one of the following actions
+is performed:
+    1. If the directory contains an asconfig.js file, then this file
+       is interpreted to setup the instance.
+    2. If no asconfig.js exists, then the directory is mounted in Simple
+       Mode.  In Simple Mode, the named directory is mounted as the root
+       and all defaults are applied.
+       
+Examples:
+    assetserver serve a/directory
+    assetserver serve directory/asconfig.js
+    assetserver serve --http=8080 .
+    

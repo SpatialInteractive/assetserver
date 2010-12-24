@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
  * Core object representing the asset tree.  The asset root contains an
  * arbitrary number of AssetMount instances mapped to paths in the
@@ -17,6 +18,11 @@ import java.util.regex.Pattern;
  *
  */
 public class AssetRoot {
+	/**
+	 * The owning server
+	 */
+	private AssetServer server;
+	
 	/**
 	 * Map of path to the owning mount point.
 	 */
@@ -29,6 +35,22 @@ public class AssetRoot {
 	 * (no slash).
 	 */
 	private volatile Pattern mountPattern;
+	
+	public AssetRoot() {
+		this(null);
+	}
+	
+	public AssetRoot(AssetServer server) {
+		setServer(server);
+	}
+	
+	public void setServer(AssetServer server) {
+		this.server = server;
+	}
+	
+	public AssetServer getServer() {
+		return server;
+	}
 	
 	/**
 	 * Get the read-only map of mount points (mapping of path prefix to mount instance)
