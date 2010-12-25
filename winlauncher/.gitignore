@@ -3,4 +3,4 @@ Release
 winlauncher.ncb
 winlauncher.vcproj.*
 *.suo
-
+*.obj

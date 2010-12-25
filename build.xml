@@ -94,11 +94,7 @@ build.version=${build.version}
 	</target>
 	
   <target name="update-winlauncher">
-    <copy todir="tools/src/net/rcode/buildtools">
-      <fileset dir="winlauncher/Release">
-        <include name="winlauncher.exe"/>
-      </fileset>
-    </copy>
+    <copy todir="tools/src/net/rcode/buildtools" file="winlauncher/winlauncher.exe"/>
   </target>
   
 	<target name="compile" depends="compile-core,stamp"/>
