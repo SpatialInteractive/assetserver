@@ -27,7 +27,16 @@ import org.apache.tools.ant.Task;
 public class JarExecTask extends Task {
 	private File source;
 	private File dest;
+	private String target;
 	
+	public String getTarget() {
+		return target;
+	}
+	
+	public void setTarget(String target) {
+		this.target=target;
+	}
+
 	public File getSource() {
 		return source;
 	}
@@ -83,8 +92,14 @@ public class JarExecTask extends Task {
 	 * Opens the appropriate header stream
 	 * @return header InputStream
 	 */
-	private InputStream openHeader() {
-		return getClass().getResourceAsStream("exec-script-header.sh");
+	private InputStream openHeader() throws BuildException {
+		if ("exe".equals(target)) {
+			return getClass().getResourceAsStream("winlauncher.exe");
+		} else if ("shell".equals(target)) {
+			return getClass().getResourceAsStream("exec-script-header.sh");
+		} else {
+			throw new BuildException("Unrecognized value '" + target + "' for target attribute");
+		}
 	}
 	
 	/**

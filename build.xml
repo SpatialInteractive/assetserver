@@ -93,6 +93,14 @@ build.version=${build.version}
 		</taskdef>
 	</target>
 	
+  <target name="update-winlauncher">
+    <copy todir="tools/src/net/rcode/buildtools">
+      <fileset dir="winlauncher/Release">
+        <include name="winlauncher.exe"/>
+      </fileset>
+    </copy>
+  </target>
+  
 	<target name="compile" depends="compile-core,stamp"/>
 	<target name="compile-core" depends="-init">
 		<!-- Compile cphelp -->
@@ -200,7 +208,7 @@ build.version=${build.version}
 		</jar>
 		
 		<!-- Create unixy self executor -->
-		<jarexec source="${build.jar.dir}/assetserver-main.jar" dest="${build.jar.dir}/assetserver"/>
-		
+		<jarexec target="shell" source="${build.jar.dir}/assetserver-main.jar" dest="${build.jar.dir}/assetserver"/>
+		<jarexec target="exe" source="${build.jar.dir}/assetserver-main.jar" dest="${build.jar.dir}/assetserver.exe"/>
 	</target>
 </project>
