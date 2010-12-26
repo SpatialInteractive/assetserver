@@ -59,8 +59,10 @@ public abstract class CachingResourceHandler implements ResourceHandler {
 		if (entry!=null && entry.isValid()) return entry;
 		
 		// No hit.  Generate.
-		owner.getServer().getLogger().info("Cache entry not valid.  Regenerating " + assetPath.getPath());
+		long runTime=System.currentTimeMillis();
 		entry=generateResource(identity, owner, assetPath, physicalResource);
+		runTime=System.currentTimeMillis()-runTime;
+		owner.getServer().getLogger().info("Cache entry not valid.  Regenerated " + assetPath.getPath() + " (time=" + runTime + "ms)");
 		if (entry==null) return null;
 		
 		// Convert to a CacheEntry
