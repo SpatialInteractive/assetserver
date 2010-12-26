@@ -1,6 +1,7 @@
 package net.rcode.assetserver.standalone;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -156,7 +157,17 @@ public class JettyHandler extends AbstractHandler {
 		
 		// Write output
 		if (!isHead) {
-			locator.writeTo(out);
+			InputStream locatorIn=locator.getInputStream();
+			try {
+				byte[] buffer=new byte[4096];
+				for (;;) {
+					int r=locatorIn.read(buffer);
+					if (r<0) break; if (r==0) continue;
+					out.write(buffer, 0, r);
+				}
+			} finally {
+				locatorIn.close();
+			}
 			if (gzipOut!=null) gzipOut.finish();
 			out.flush();
 		}

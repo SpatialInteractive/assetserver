@@ -1,6 +1,7 @@
 package net.rcode.assetserver.core;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -25,11 +26,11 @@ public interface AssetLocator {
 	public String getETag();
 	
 	/**
-	 * Write to the given output stream.  Does not close the stream.
-	 * @param out
+	 * Get an input stream to the content.  The caller must close the stream.
+	 * @return a freshly opened InputStream
 	 * @throws IOException
 	 */
-	public void writeTo(OutputStream out) throws IOException;
+	public InputStream getInputStream() throws IOException;
 	
 	/**
 	 * @return The length of the data that will be written to out or -1 if unknown.  This should be

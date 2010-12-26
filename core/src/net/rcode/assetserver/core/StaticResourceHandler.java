@@ -49,22 +49,10 @@ public class StaticResourceHandler implements ResourceHandler {
 			public String getETag() {
 				return "F:" + physicalResource.lastModified() + ":" + physicalResource.length();
 			}
-			
+
 			@Override
-			public void writeTo(OutputStream output) throws IOException {
-				InputStream input=new FileInputStream(physicalResource);
-				byte[] buffer=new byte[4096];
-				
-				try {
-					for (;;) {
-						int r=input.read(buffer);
-						if (r<0) break;
-						if (r==0) continue;
-						output.write(buffer, 0, r);
-					}
-				} finally {
-					input.close();
-				}
+			public InputStream getInputStream() throws IOException {
+				return new FileInputStream(physicalResource);
 			}
 			
 			@Override
