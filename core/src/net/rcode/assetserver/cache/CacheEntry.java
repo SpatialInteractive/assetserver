@@ -5,6 +5,7 @@ import java.io.OutputStream;
 import java.io.Serializable;
 
 import net.rcode.assetserver.core.AssetLocator;
+import net.rcode.assetserver.util.MessageDigestBuilder;
 
 /**
  * An entry in the cache.  This also implements AssetLocator so it can be returned
@@ -21,6 +22,7 @@ public class CacheEntry implements Serializable, AssetLocator {
 	private String contentType;
 	private String characterEncoding;
 	private byte[] contents;
+	private volatile transient String etag;
 	
 	protected CacheEntry() { }
 	public CacheEntry(CacheIdentity identity, CacheDependency[] dependencies, String contentType, String characterEncoding, byte[] contents) {
@@ -29,6 +31,18 @@ public class CacheEntry implements Serializable, AssetLocator {
 		this.contentType=contentType;
 		this.characterEncoding=characterEncoding;
 		this.contents=contents;
+	}
+	
+	@Override
+	public String getETag() {
+		String value=etag;
+		if (value==null && contents!=null) {
+			MessageDigestBuilder b=new MessageDigestBuilder("MD5");
+			b.append(contents);
+			value=b.getValueAsHex();
+			etag=value;
+		}
+		return value;
 	}
 	
 	public CacheIdentity getIdentity() {
@@ -56,8 +70,15 @@ public class CacheEntry implements Serializable, AssetLocator {
 	public String getCharacterEncoding() {
 		return characterEncoding;
 	}
+	
 	@Override
 	public void writeTo(OutputStream out) throws IOException {
 		if (contents!=null) out.write(contents);
+	}
+	
+	@Override
+	public long getLength() {
+		if (contents==null) return 0;
+		return contents.length;
 	}
 }

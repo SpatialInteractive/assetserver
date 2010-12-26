@@ -35,8 +35,7 @@ public class JettyServer {
 	
 	public JettyServer(AssetServer server) {
 		this.server=server;
-		this.jettyHandler=new JettyHandler();
-		this.jettyHandler.setRoot(server.getRoot());
+		this.jettyHandler=new JettyHandler(server);
 	}
 	
 	public int getHttpPort() {

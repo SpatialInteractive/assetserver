@@ -45,23 +45,12 @@ import net.rcode.assetserver.core.ResourceMount;
  *
  */
 public abstract class CachingResourceHandler implements ResourceHandler {
-	public static final long GLOBAL_SERIAL_VERSION_UID=1l;
-	
-	/**
-	 * The override cacheLocation.  If null, a default is used.
-	 */
-	private File cacheLocation;
+	public static final long GLOBAL_SERIAL_VERSION_UID=2l;
 	
 	@Override
 	public final AssetLocator accessResource(ResourceMount owner,
 			AssetPath assetPath, File physicalResource) throws Exception {
-		File actualCacheLocation=cacheLocation;
-		if (actualCacheLocation==null) {
-			// Use a default
-			actualCacheLocation=new File(owner.getLocation(), ".cache");
-		}
-		
-		Cache cache=new Cache(actualCacheLocation);
+		Cache cache=owner.getServer().getSharedCache();
 		CacheIdentity identity=new CacheIdentity(getClass().getName(),
 				assetPath.getMountPoint(), assetPath.getPath(),
 				"");	// TODO: Add environment options redux
@@ -70,6 +59,7 @@ public abstract class CachingResourceHandler implements ResourceHandler {
 		if (entry!=null && entry.isValid()) return entry;
 		
 		// No hit.  Generate.
+		owner.getServer().getLogger().info("Cache entry not valid.  Regenerating " + assetPath.getPath());
 		entry=generateResource(identity, owner, assetPath, physicalResource);
 		if (entry==null) return null;
 		
@@ -89,11 +79,4 @@ public abstract class CachingResourceHandler implements ResourceHandler {
 	protected abstract CacheEntry generateResource(CacheIdentity identity, 
 			ResourceMount owner,
 			AssetPath assetPath, File physicalResource) throws Exception;
-	
-	public File getCacheLocation() {
-		return cacheLocation;
-	}
-	public void setCacheLocation(File cacheLocation) {
-		this.cacheLocation = cacheLocation;
-	}
 }

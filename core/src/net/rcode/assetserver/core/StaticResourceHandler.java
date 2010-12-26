@@ -13,20 +13,9 @@ import java.io.OutputStream;
  *
  */
 public class StaticResourceHandler implements ResourceHandler {
-	private MimeMapping mimeMapping;
 	private String defaultEncoding="UTF-8";
 	
 	public StaticResourceHandler() {
-		mimeMapping=new MimeMapping();
-		mimeMapping.loadDefaults();
-	}
-	
-	public void setMimeMapping(MimeMapping mimeMapping) {
-		this.mimeMapping = mimeMapping;
-	}
-	
-	public MimeMapping getMimeMapping() {
-		return mimeMapping;
 	}
 	
 	public String getDefaultEncoding() {
@@ -39,8 +28,9 @@ public class StaticResourceHandler implements ResourceHandler {
 	@Override
 	public AssetLocator accessResource(ResourceMount owner,
 			AssetPath assetPath, final File physicalResource) throws Exception {
-		final String mimeType=getMimeMapping().lookup(assetPath.getBaseName());
-		final boolean isText=getMimeMapping().isTextualMimeType(mimeType);
+		MimeMapping mimeMapping=owner.getServer().getMimeMapping();
+		final String mimeType=mimeMapping.lookup(assetPath.getBaseName());
+		final boolean isText=mimeMapping.isTextualMimeType(mimeType);
 		
 		return new AssetLocator() {
 
@@ -56,6 +46,11 @@ public class StaticResourceHandler implements ResourceHandler {
 			}
 
 			@Override
+			public String getETag() {
+				return "F:" + physicalResource.lastModified() + ":" + physicalResource.length();
+			}
+			
+			@Override
 			public void writeTo(OutputStream output) throws IOException {
 				InputStream input=new FileInputStream(physicalResource);
 				byte[] buffer=new byte[4096];
@@ -70,6 +65,11 @@ public class StaticResourceHandler implements ResourceHandler {
 				} finally {
 					input.close();
 				}
+			}
+			
+			@Override
+			public long getLength() {
+				return physicalResource.length();
 			}
 			
 		};

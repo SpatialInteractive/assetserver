@@ -53,6 +53,11 @@ public class ResourceMount extends AssetMount {
 	 */
 	private LinkedList<HandlerEntry> handlers=new LinkedList<ResourceMount.HandlerEntry>();
 	
+	/**
+	 * The owning server instance
+	 */
+	private AssetServer server;
+	
 	private static class HandlerEntry {
 		public NamePattern pattern;
 		public ResourceHandler handler;
@@ -63,8 +68,13 @@ public class ResourceMount extends AssetMount {
 		}
 	}
 	
-	public ResourceMount(File location) throws IOException {
+	public ResourceMount(File location, AssetServer server) throws IOException {
+		this.server=server;
 		this.location=location.getCanonicalFile();
+	}
+	
+	public AssetServer getServer() {
+		return server;
 	}
 	
 	public File getLocation() {

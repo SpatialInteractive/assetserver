@@ -25,10 +25,14 @@ public class MessageDigestBuilder {
 	
 	public void append(String s) {
 		try {
-			digest.digest(s.getBytes("UTF-16BE"));
+			digest.update(s.getBytes("UTF-16BE"));
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException("Could not get UTF-16BE character set", e);
 		}
+	}
+	
+	public void append(byte[] buffer) {
+		digest.update(buffer);
 	}
 	
 	public byte[] getValue() {

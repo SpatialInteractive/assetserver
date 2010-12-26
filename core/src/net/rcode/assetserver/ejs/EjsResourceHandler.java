@@ -32,7 +32,6 @@ import org.mozilla.javascript.Function;
  *
  */
 public class EjsResourceHandler extends CachingResourceHandler {
-	private MimeMapping mimeMapping;
 	private EjsRuntime runtime;
 	private EjsCompiler compiler;
 
@@ -41,13 +40,13 @@ public class EjsResourceHandler extends CachingResourceHandler {
 		runtime.loadLibraryStd();
 		
 		compiler=new EjsCompiler(runtime);
-		mimeMapping=new MimeMapping();
-		mimeMapping.loadDefaults();
 	}
 	
 	@Override
 	protected CacheEntry generateResource(CacheIdentity identity, ResourceMount owner,
 			AssetPath assetPath, File physicalResource) throws Exception {
+		MimeMapping mimeMapping=owner.getServer().getMimeMapping();
+		
 		EjsRuntime.Instance instance=runtime.createInstance();
 		Set<File> fileDependencies=new HashSet<File>();
 		fileDependencies.add(physicalResource);

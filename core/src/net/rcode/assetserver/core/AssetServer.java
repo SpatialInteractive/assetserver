@@ -30,7 +30,11 @@ public class AssetServer {
 	private File sharedCacheLocation;
 	private Cache sharedCache;
 	
+	private ServerConfig config;
+	
 	public AssetServer(File location) throws IllegalArgumentException, IOException {
+		this.config=new ServerConfig();
+		
 		this.javascriptRuntime=new EjsRuntime();
 		initializeJavaScriptRuntime();
 		
@@ -38,9 +42,13 @@ public class AssetServer {
 		mimeMapping.loadDefaults();
 		
 		setupLocation(location);
-		sharedCacheLocation=new File(configDirectory, ".cache");
+		setSharedCacheLocation(new File(configDirectory, ".cache"));
 		
 		root=new AssetRoot(this);
+	}
+	
+	public Logger getLogger() {
+		return logger;
 	}
 	
 	/**
@@ -49,7 +57,7 @@ public class AssetServer {
 	 */
 	public void setupSimple() throws IOException {
 		logger.info("Setting up server defaults for location " + configDirectory);
-		ResourceMount rootMount=new ResourceMount(configDirectory);
+		ResourceMount rootMount=new ResourceMount(configDirectory, this);
 		root.add("/", rootMount);
 		EjsResourceHandler ejsHandler=new EjsResourceHandler();
 		rootMount.addHandler("*", new StaticResourceHandler());
@@ -66,6 +74,14 @@ public class AssetServer {
 	 */
 	public File getSharedCacheLocation() {
 		return sharedCacheLocation;
+	}
+	
+	/**
+	 * Get the global config
+	 * @return global config
+	 */
+	public ServerConfig getConfig() {
+		return config;
 	}
 	
 	/**
