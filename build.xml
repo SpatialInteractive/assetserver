@@ -47,7 +47,8 @@ build.version=${build.version}
 			<include name="core/commons-codec-*.jar"/>
 			<include name="core/js-*.jar"/>
 			<include name="core/jopt-simple-*.jar"/>
-
+			<include name="core/svgSalamander.jar"/>
+			
 			<include name="jetty/*.jar"/>
 		</fileset>
 	</path>
@@ -194,6 +195,7 @@ build.version=${build.version}
 			<zipfileset prefix="lib/depend" src="lib/core/commons-codec-1.4.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/core/js-1.7R2.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/core/jopt-simple-3.2.jar"/>
+			<zipfileset prefix="lib/depend" src="lib/core/svgSalamander.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-util-${jetty.version}.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-server-${jetty.version}.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/jetty/jetty-io-${jetty.version}.jar"/>

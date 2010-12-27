@@ -37,8 +37,10 @@ public class MimeMapping {
 	public String lookup(String fileName) {
 		if (fileName==null) return null;
 		int dotPos=fileName.lastIndexOf('.');
-		if (dotPos<0) return null;
-		String extension=fileName.substring(dotPos+1).toLowerCase();
+		String extension; 
+		if (dotPos<0) extension=fileName;
+		else extension=fileName.substring(dotPos+1).toLowerCase();
+		
 		String mimeType=mappings.get(extension);
 		return mimeType;
 	}

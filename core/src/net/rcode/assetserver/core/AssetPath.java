@@ -2,6 +2,10 @@ package net.rcode.assetserver.core;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -76,6 +80,11 @@ public class AssetPath {
 	 * Flag indicating whether the path is syntactically valid
 	 */
 	private boolean valid;
+	
+	/**
+	 * If null, then parameters have not yet been parsed.
+	 */
+	private Map<String, String> parameters;
 	
 	public AssetPath(AssetMount mount, String mountPoint, String path) {
 		this.mount=mount;
@@ -202,5 +211,52 @@ public class AssetPath {
 
 	public boolean isValid() {
 		return valid;
+	}
+	
+	// Parameter access
+	public String getParameter(String name) {
+		initParameters();
+		return parameters.get(name);
+	}
+	
+	public String getParameter(String name, String dv) {
+		initParameters();
+		String ret=parameters.get(name);
+		if (ret==null) return dv;
+		else return ret;
+	}
+	
+	public Collection<String> getParameterNames() {
+		return Collections.unmodifiableCollection(parameters.keySet());
+	}
+	
+	private static final Pattern AMPSPLIT=Pattern.compile("\\&");
+	protected void initParameters() {
+		if (parameters!=null) return;
+		parameters=new HashMap<String, String>();
+		if (parameterString==null || parameterString.isEmpty()) return;
+		
+		String nvcmps[]=AMPSPLIT.split(parameterString);
+		for (String nv: nvcmps) {
+			String name, value;
+			int eqpos=nv.indexOf('=');
+			if (eqpos<0) {
+				name=nv;
+				value="";
+			} else {
+				name=nv.substring(0, eqpos);
+				value=nv.substring(eqpos+1);
+			}
+			
+			parameters.put(urlDecode(name), urlDecode(value));
+		}
+	}
+
+	private String urlDecode(String value) {
+		try {
+			return URLDecoder.decode(value, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

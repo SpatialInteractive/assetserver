@@ -46,6 +46,9 @@ public class Main {
 	}
 	
 	public static void main(String[] args) throws Throwable {
+		// Set AWT headless mode
+		System.setProperty("java.awt.headless", "true");
+		
 		// Initialize the overall option parser
 		initOnce();
 		resetLogging();

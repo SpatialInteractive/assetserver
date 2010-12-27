@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import net.rcode.assetserver.cache.Cache;
 import net.rcode.assetserver.ejs.EjsResourceFilter;
 import net.rcode.assetserver.ejs.EjsRuntime;
+import net.rcode.assetserver.svg.SvgRenderResourceFilter;
 
 /**
  * Sets up an assetserver instance.  This class is used at initialization time
@@ -78,6 +79,8 @@ public class AssetServer {
 		rootFilterSelector.add("*.html", ejs);
 		rootFilterSelector.add("*.js", ejs);
 		rootFilterSelector.add("*.css", ejs);
+		
+		rootFilterSelector.add("*.svg", new SvgRenderResourceFilter());
 	}
 	
 	/**

@@ -20,7 +20,7 @@ public class VersionInfo {
 			try {
 				if (propIn!=null) properties.load(propIn);
 			} finally {
-				propIn.close();
+				if (propIn!=null) propIn.close();
 			}
 		} catch (IOException e) {
 			// Ignore
