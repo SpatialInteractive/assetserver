@@ -35,6 +35,13 @@ public class CacheEntry implements Serializable, AssetLocator {
 		this.contents=contents;
 	}
 	
+	/**
+	 * @return true if content is null (negative cache)
+	 */
+	public boolean isNullContent() {
+		return contents==null;
+	}
+	
 	@Override
 	public String getETag() {
 		String value=etag;
@@ -62,6 +69,11 @@ public class CacheEntry implements Serializable, AssetLocator {
 		}
 		
 		return true;
+	}
+	
+	@Override
+	public boolean shouldCache() {
+		return false;
 	}
 	
 	@Override

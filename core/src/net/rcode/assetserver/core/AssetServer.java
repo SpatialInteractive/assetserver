@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.rcode.assetserver.cache.Cache;
-import net.rcode.assetserver.ejs.EjsResourceHandler;
+import net.rcode.assetserver.ejs.EjsResourceFilter;
 import net.rcode.assetserver.ejs.EjsRuntime;
 
 /**
@@ -24,6 +24,7 @@ public class AssetServer {
 	private EjsRuntime javascriptRuntime;
 	private File configDirectory;
 	private File configFile;
+	private String defaultTextFileEncoding="UTF-8";
 	
 	private AssetRoot root;
 	private MimeMapping mimeMapping;
@@ -31,6 +32,7 @@ public class AssetServer {
 	private Cache sharedCache;
 	
 	private ServerConfig config;
+	private FilterSelector rootFilterSelector=new FilterSelector();
 	
 	public AssetServer(File location) throws IllegalArgumentException, IOException {
 		this.config=new ServerConfig();
@@ -51,6 +53,18 @@ public class AssetServer {
 		return logger;
 	}
 	
+	public String getDefaultTextFileEncoding() {
+		return defaultTextFileEncoding;
+	}
+	
+	public void setDefaultTextFileEncoding(String defaultTextFileEncoding) {
+		this.defaultTextFileEncoding = defaultTextFileEncoding;
+	}
+	
+	public FilterSelector getRootFilterSelector() {
+		return rootFilterSelector;
+	}
+	
 	/**
 	 * Perform a simple setup.
 	 * @throws IOException 
@@ -59,11 +73,11 @@ public class AssetServer {
 		logger.info("Setting up server defaults for location " + configDirectory);
 		ResourceMount rootMount=new ResourceMount(configDirectory, this);
 		root.add("/", rootMount);
-		EjsResourceHandler ejsHandler=new EjsResourceHandler();
-		rootMount.addHandler("*", new StaticResourceHandler());
-		rootMount.addHandler("*.html", ejsHandler);
-		rootMount.addHandler("*.js", ejsHandler);
-		rootMount.addHandler("*.css", ejsHandler);
+		
+		EjsResourceFilter ejs=new EjsResourceFilter();
+		rootFilterSelector.add("*.html", ejs);
+		rootFilterSelector.add("*.js", ejs);
+		rootFilterSelector.add("*.css", ejs);
 	}
 	
 	/**

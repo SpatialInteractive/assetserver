@@ -1,8 +1,10 @@
 package net.rcode.assetserver.util;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,6 +18,25 @@ import java.io.Reader;
  *
  */
 public class IOUtil {
+	public static byte[] slurpBinary(InputStream input, int sizeHint) throws IOException {
+		try {
+			ByteArrayOutputStream out;
+			if (sizeHint>0) out=new ByteArrayOutputStream(sizeHint);
+			else out=new ByteArrayOutputStream();
+			
+			byte[] buffer=new byte[4096];
+			for (;;) {
+				int r=input.read(buffer);
+				if (r<0) break; if (r==0) continue;
+				out.write(buffer, 0, r);
+			}
+			
+			return out.toByteArray();
+		} finally {
+			input.close();
+		}
+	}
+	
 	/**
 	 * Read an entire file in the given encoding
 	 * @param file
@@ -93,5 +114,16 @@ public class IOUtil {
 		} catch (IOException e) {
 			throw new RuntimeException("IO Error reading resource " + name + " relative to " + relativeTo.getName(), e);
 		}
+	}
+
+	/**
+	 * If the input stream is not already buffered, buffer it.
+	 * @param inputStream
+	 * @return buffered stream
+	 */
+	public static InputStream buffer(InputStream inputStream) {
+		if (inputStream==null) return null;
+		if (inputStream instanceof BufferedInputStream || inputStream instanceof ByteArrayInputStream) return inputStream;
+		return new BufferedInputStream(inputStream);
 	}
 }

@@ -2,7 +2,6 @@ package net.rcode.assetserver.core;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * The result of resolving a path.  Used to access an asset.
@@ -10,6 +9,11 @@ import java.io.OutputStream;
  *
  */
 public interface AssetLocator {
+	/**
+	 * @return true if the locator should be cached (ie. it is expensive to regenerate)
+	 */
+	public boolean shouldCache();
+	
 	/**
 	 * @return The asset's content type or null if unknown
 	 */

@@ -2,7 +2,14 @@ package net.rcode.assetserver.core;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.io.InputStream;
+
+import net.rcode.assetserver.cache.Cache;
+import net.rcode.assetserver.cache.CacheDependency;
+import net.rcode.assetserver.cache.CacheEntry;
+import net.rcode.assetserver.cache.CacheIdentity;
+import net.rcode.assetserver.cache.FileCacheDependency;
+import net.rcode.assetserver.util.IOUtil;
 
 /**
  * Serves assets off of a directory on the file system.  This also serves
@@ -49,24 +56,9 @@ public class ResourceMount extends AssetMount {
 	private File location;
 	
 	/**
-	 * List of handlers to consult on how to serve a file.  LIFO order.
-	 */
-	private LinkedList<HandlerEntry> handlers=new LinkedList<ResourceMount.HandlerEntry>();
-	
-	/**
 	 * The owning server instance
 	 */
 	private AssetServer server;
-	
-	private static class HandlerEntry {
-		public NamePattern pattern;
-		public ResourceHandler handler;
-		
-		public HandlerEntry(NamePattern pattern, ResourceHandler handler) {
-			this.pattern=pattern;
-			this.handler=handler;
-		}
-	}
 	
 	public ResourceMount(File location, AssetServer server) throws IOException {
 		this.server=server;
@@ -93,24 +85,6 @@ public class ResourceMount extends AssetMount {
 	}
 	public void setUserExclusions(NamePattern userExclusions) {
 		this.userExclusions = userExclusions;
-	}
-	
-	/**
-	 * Add a handler for the given namePattern.  Handlers added later have precedence.
-	 * @param namePattern
-	 * @param handler
-	 */
-	public void addHandler(NamePattern namePattern, ResourceHandler handler) {
-		handlers.addFirst(new HandlerEntry(namePattern, handler));
-	}
-	
-	/**
-	 * Add a handler that matches a single name glob.
-	 * @param namePattern
-	 * @param handler
-	 */
-	public void addHandler(String namePattern, ResourceHandler handler) {
-		addHandler(new NamePattern(namePattern).freeze(), handler);
 	}
 	
 	@Override
@@ -154,20 +128,65 @@ public class ResourceMount extends AssetMount {
 			return null;
 		}
 		
-		// Ok.  It's a valid file.  Find a handler for it.
-		String baseName=assetPath.getBaseName();
-		ResourceHandler handler=null;
-		for (HandlerEntry entry: handlers) {
-			if (entry.pattern.matches(baseName)) {
-				// Found one
-				handler=entry.handler;
-				break;
+		// See if we have a valid hit in the cache
+		CacheIdentity identity=new CacheIdentity(getClass().getName(),
+				assetPath.getMountPoint(), assetPath.getPath(),
+				"");	// TODO: Add environment options redux
+		Cache cache=server.getSharedCache();
+		CacheEntry cacheEntry;
+		if (cache!=null) {
+			cacheEntry=cache.lookup(identity);
+			if (cacheEntry!=null && cacheEntry.isValid()) {
+				if (cacheEntry.isNullContent()) return null;
+				else return cacheEntry;
 			}
 		}
 		
-		if (handler==null) return null;	// No handler
+		// No hit -
+		// Create the root locator and initialize the filter chain
+		MimeMapping mimeMapping=server.getMimeMapping();
+		String mimeType=mimeMapping.lookup(resolvedFile.getName());
+		FileAssetLocator rootLocator=new FileAssetLocator(resolvedFile);
+		rootLocator.setContentType(mimeType);
+		if (mimeMapping.isTextualMimeType(mimeType)) {
+			// Set encoding
+			rootLocator.setCharacterEncoding(server.getDefaultTextFileEncoding());
+		}
 		
-		AssetLocator locator=handler.accessResource(this, assetPath, resolvedFile);
-		return locator;
+		FilterChain chain=new FilterChain(server, assetPath, rootLocator, resolvedFile);
+		chain.getDependencies().add(new FileCacheDependency(resolvedFile));
+		initializeFilterChain(chain, resolvedFile);
+		chain.processFilters();
+		
+		// Get the resolved locator and handle caching
+		AssetLocator resolvedLocator=chain.getCurrent();
+		if (resolvedLocator==null || resolvedLocator.shouldCache()) {
+			// Cache negative results or things explicitly cacheable
+			CacheDependency[] dependencies=chain.getDependencies().toArray(new CacheDependency[chain.getDependencies().size()]);
+			if (resolvedLocator==null) {
+				// Store a negative cache entry
+				cacheEntry=new CacheEntry(identity, dependencies, null, null, null);
+				cache.store(cacheEntry);
+				return null;
+			} else {
+				// Store a positive cache entry and return it
+				cacheEntry=new CacheEntry(identity, dependencies, resolvedLocator.getContentType(),
+						resolvedLocator.getCharacterEncoding(), slurpLocatorContents(resolvedLocator));
+				cache.store(cacheEntry);
+				return cacheEntry;
+			}
+		} else {
+			// Not cacheable - just return
+			return resolvedLocator;
+		}
+	}
+
+	private byte[] slurpLocatorContents(AssetLocator resolvedLocator) throws IOException {
+		InputStream input=resolvedLocator.getInputStream();
+		return IOUtil.slurpBinary(input, (int)resolvedLocator.getLength());
+	}
+
+	protected void initializeFilterChain(FilterChain chain, File resolvedFile) {
+		server.getRootFilterSelector().build(chain.getAssetPath(), chain);
 	}
 }

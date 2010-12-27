@@ -39,4 +39,16 @@ public class FileCacheDependency extends CacheDependency implements Serializable
 			.append(length, currentFile.length())
 			.isEquals();
 	}
+	
+	@Override
+	public int hashCode() {
+		return dependentPath.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj==null) return false;
+		if (!(obj instanceof FileCacheDependency)) return false;
+		return ((FileCacheDependency)obj).dependentPath.equals(dependentPath);
+	}
 }
