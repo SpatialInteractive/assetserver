@@ -8,7 +8,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class CacheIdentity implements Serializable {
-	private static final long serialVersionUID=CachingResourceHandler.GLOBAL_SERIAL_VERSION_UID;
+	private static final long serialVersionUID=CacheEntry.GLOBAL_SERIAL_VERSION_UID;
 	
 	private String handlerClassName;
 	private String mountPoint;

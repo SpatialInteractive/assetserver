@@ -15,7 +15,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
  *
  */
 public class FileCacheDependency extends CacheDependency implements Serializable {
-	private static final long serialVersionUID=CachingResourceHandler.GLOBAL_SERIAL_VERSION_UID;
+	private static final long serialVersionUID=CacheEntry.GLOBAL_SERIAL_VERSION_UID;
 	
 	private String dependentPath;
 	private boolean exists;

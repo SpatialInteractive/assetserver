@@ -3,7 +3,6 @@ package net.rcode.assetserver.cache;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
 
 import net.rcode.assetserver.core.AssetLocator;
@@ -17,7 +16,8 @@ import net.rcode.assetserver.util.MessageDigestBuilder;
  *
  */
 public class CacheEntry implements Serializable, AssetLocator {
-	private static final long serialVersionUID=CachingResourceHandler.GLOBAL_SERIAL_VERSION_UID;
+	public static final long GLOBAL_SERIAL_VERSION_UID=4;
+	private static final long serialVersionUID=GLOBAL_SERIAL_VERSION_UID;
 	
 	private CacheIdentity identity;
 	private CacheDependency[] dependencies;
