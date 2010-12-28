@@ -68,6 +68,7 @@ public class LoaderLookup {
 		ClassLoader system=ClassLoader.getSystemClassLoader();
 		loaders.put("system", system);
 		loaders.put("this", LoaderLookup.class.getClassLoader());
+		loaders.put("bootstrap", system.getParent());
 	}
 	
 	public Properties getLoaderProperties() {
