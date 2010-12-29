@@ -42,9 +42,10 @@ public class FilterChain {
 	 * @throws Exception 
 	 */
 	public void processFilters() throws Exception {
-		if (current==null || filters.isEmpty()) return;
-		ResourceFilter filter=filters.removeFirst();
-		current=filter.filter(this, current);
+		while (current!=null && !filters.isEmpty()) {
+			ResourceFilter filter=filters.removeFirst();
+			current=filter.filter(this, current);
+		}
 	}
 	
 	/**

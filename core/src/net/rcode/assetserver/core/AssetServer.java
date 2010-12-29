@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import net.rcode.assetserver.cache.Cache;
 import net.rcode.assetserver.ejs.EjsResourceFilter;
 import net.rcode.assetserver.ejs.EjsRuntime;
+import net.rcode.assetserver.optimizer.YuiOptimizeCssResourceFilter;
+import net.rcode.assetserver.optimizer.YuiOptimizeJsResourceFilter;
 import net.rcode.assetserver.svg.SvgRenderResourceFilter;
 
 /**
@@ -81,6 +83,9 @@ public class AssetServer {
 		rootFilterSelector.add("*.css", ejs);
 		
 		rootFilterSelector.add("*.svg", new SvgRenderResourceFilter());
+		
+		rootFilterSelector.add("*.js", new YuiOptimizeJsResourceFilter());
+		rootFilterSelector.add("*.css", new YuiOptimizeCssResourceFilter());
 	}
 	
 	/**
