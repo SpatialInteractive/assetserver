@@ -182,8 +182,8 @@ public class ResourceMount extends AssetMount {
 	}
 
 	private byte[] slurpLocatorContents(AssetLocator resolvedLocator) throws IOException {
-		InputStream input=resolvedLocator.getInputStream();
-		return IOUtil.slurpBinary(input, (int)resolvedLocator.getLength());
+		InputStream input=resolvedLocator.openInput();
+		return IOUtil.slurpBinary(input, (int)resolvedLocator.length());
 	}
 
 	protected void initializeFilterChain(FilterChain chain, File resolvedFile) {

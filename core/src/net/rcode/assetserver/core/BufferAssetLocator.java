@@ -1,8 +1,10 @@
 package net.rcode.assetserver.core;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+
+import net.rcode.assetserver.util.BufferAccessor;
 
 /**
  * AssetLocator wrapping a buffer with all properties mutable
@@ -14,7 +16,11 @@ public class BufferAssetLocator implements AssetLocator {
 	private String contentType;
 	private String characterEncoding;
 	private String eTag;
-	private byte[] buffer;
+	private BufferAccessor delegate;
+
+	public BufferAssetLocator(BufferAccessor delegate) {
+		this.delegate=delegate;
+	}
 	
 	public void setShouldCache(boolean shouldCache) {
 		this.shouldCache = shouldCache;
@@ -30,10 +36,6 @@ public class BufferAssetLocator implements AssetLocator {
 	
 	public void setETag(String eTag) {
 		this.eTag = eTag;
-	}
-	
-	public void setBuffer(byte[] buffer) {
-		this.buffer = buffer;
 	}
 	
 	@Override
@@ -56,14 +58,20 @@ public class BufferAssetLocator implements AssetLocator {
 		return eTag;
 	}
 
-	@Override
-	public InputStream getInputStream() throws IOException {
-		return new ByteArrayInputStream(buffer==null ? new byte[0]: buffer);
+	public InputStream openInput() throws IOException {
+		return delegate.openInput();
 	}
 
-	@Override
-	public long getLength() {
-		return buffer.length;
+	public byte[] getBytes() throws IOException {
+		return delegate.getBytes();
+	}
+
+	public void writeTo(OutputStream out) throws IOException {
+		delegate.writeTo(out);
+	}
+
+	public long length() {
+		return delegate.length();
 	}
 
 }

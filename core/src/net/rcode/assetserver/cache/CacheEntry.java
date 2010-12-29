@@ -3,6 +3,7 @@ package net.rcode.assetserver.cache;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 
 import net.rcode.assetserver.core.AssetLocator;
@@ -86,14 +87,24 @@ public class CacheEntry implements Serializable, AssetLocator {
 	}
 	
 	@Override
-	public InputStream getInputStream() throws IOException {
-		if (contents==null) return new ByteArrayInputStream(new byte[0]);
-		else return new ByteArrayInputStream(contents);
+	public InputStream openInput() throws IOException {
+		if (contents!=null) return new ByteArrayInputStream(contents);
+		else return new ByteArrayInputStream(new byte[0]);
 	}
 	
 	@Override
-	public long getLength() {
-		if (contents==null) return 0;
+	public byte[] getBytes() throws IOException {
+		return contents.clone();
+	}
+	
+	@Override
+	public void writeTo(OutputStream out) throws IOException {
+		out.write(contents);
+	}
+	
+	@Override
+	public long length() {
 		return contents.length;
 	}
+	
 }

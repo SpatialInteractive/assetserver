@@ -157,17 +157,7 @@ public class JettyHandler extends AbstractHandler {
 		
 		// Write output
 		if (!isHead) {
-			InputStream locatorIn=locator.getInputStream();
-			try {
-				byte[] buffer=new byte[4096];
-				for (;;) {
-					int r=locatorIn.read(buffer);
-					if (r<0) break; if (r==0) continue;
-					out.write(buffer, 0, r);
-				}
-			} finally {
-				locatorIn.close();
-			}
+			locator.writeTo(out);
 			if (gzipOut!=null) gzipOut.finish();
 			out.flush();
 		}

@@ -153,14 +153,25 @@ build.version=${build.version}
 		</copy>
 	</target>
 	
+	<target name="launch-debug">
+		<property name="debug.port" value="8000"/>
+		<property name="jvm.debug.args" value="-agentlib:jdwp=server=y,transport=dt_socket,suspend=y,address=${debug.port}"/>
+	</target>
+	
+	<target name="-launch-config">
+		<property name="jvm.debug.args" value=""/>
+		<property name="jvm.args" value=""/>
+	</target>
 	
 	<target name="test" depends="test-core"/>
-	<target name="test-core" depends="compile-core">
-		<junit fork="yes" forkmode="once" printsummary="on"
+	<target name="test-core" depends="-launch-config,compile-core">
+		<junit fork="yes" forkmode="once" printsummary="withOutAndErr"
 			haltonfailure="yes">
+			<jvmarg line="${jvm.args} ${jvm.debug.args}"/>
 			<classpath>
 				<path refid="core.classpath"/>
 				<path refid="test.classpath"/>
+				<pathelement location="${build.cphelp.classes}"/>
 				<pathelement location="${build.core.classes}"/>
 				<pathelement location="${build.core.test}"/>
 			</classpath>

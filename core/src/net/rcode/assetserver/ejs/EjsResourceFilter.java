@@ -9,6 +9,7 @@ import net.rcode.assetserver.core.AssetLocator;
 import net.rcode.assetserver.core.BufferAssetLocator;
 import net.rcode.assetserver.core.FilterChain;
 import net.rcode.assetserver.core.ResourceFilter;
+import net.rcode.assetserver.util.BlockOutputStream;
 import net.rcode.assetserver.util.IOUtil;
 
 import org.mozilla.javascript.Context;
@@ -45,8 +46,8 @@ public class EjsResourceFilter extends ResourceFilter {
 		// Generate the content
 		String encoding=source.getCharacterEncoding();
 		if (encoding==null) encoding=context.getServer().getDefaultTextFileEncoding();
-		Reader templateIn=new InputStreamReader(IOUtil.buffer(source.getInputStream()), encoding);
-		ByteArrayOutputStream outBuffer=new ByteArrayOutputStream();
+		Reader templateIn=new InputStreamReader(IOUtil.buffer(source.openInput()), encoding);
+		BlockOutputStream outBuffer=new BlockOutputStream();
 		OutputStreamWriter out=new OutputStreamWriter(outBuffer, encoding);
 		
 		Context cx=runtime.enter();
@@ -61,8 +62,7 @@ public class EjsResourceFilter extends ResourceFilter {
 		}
 		
 		// Return the locator
-		BufferAssetLocator ret=new BufferAssetLocator();
-		ret.setBuffer(outBuffer.toByteArray());
+		BufferAssetLocator ret=new BufferAssetLocator(outBuffer);
 		ret.setCharacterEncoding(encoding);
 		ret.setContentType(source.getContentType());
 		ret.setShouldCache(true);

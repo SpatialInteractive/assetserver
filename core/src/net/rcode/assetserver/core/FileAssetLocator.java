@@ -2,8 +2,12 @@ package net.rcode.assetserver.core;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+
+import net.rcode.assetserver.util.IOUtil;
 
 /**
  * An AssetLocator based on a physical file
@@ -54,12 +58,32 @@ public class FileAssetLocator implements AssetLocator {
 	}
 
 	@Override
-	public InputStream getInputStream() throws IOException {
+	public InputStream openInput() throws FileNotFoundException {
 		return new FileInputStream(file);
 	}
 
 	@Override
-	public long getLength() {
+	public byte[] getBytes() throws IOException {
+		return IOUtil.slurpBinary(openInput(), -1);
+	}
+
+	@Override
+	public void writeTo(OutputStream out) throws IOException {
+		InputStream input=openInput();
+		try {
+			byte[] buffer=new byte[4096];
+			for (;;) {
+				int r=input.read(buffer);
+				if (r<0) break;
+				out.write(buffer, 0, r);
+			}
+		} finally {
+			input.close();
+		}
+	}
+
+	@Override
+	public long length() {
 		return file.length();
 	}
 

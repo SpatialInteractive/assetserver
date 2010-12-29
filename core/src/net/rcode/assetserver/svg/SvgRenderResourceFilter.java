@@ -16,6 +16,7 @@ import net.rcode.assetserver.core.AssetPath;
 import net.rcode.assetserver.core.BufferAssetLocator;
 import net.rcode.assetserver.core.FilterChain;
 import net.rcode.assetserver.core.ResourceFilter;
+import net.rcode.assetserver.util.BlockOutputStream;
 
 import com.kitfox.svg.SVGDiagram;
 import com.kitfox.svg.SVGUniverse;
@@ -44,7 +45,7 @@ public class SvgRenderResourceFilter extends ResourceFilter {
 		
 		// Load SVG
 		SVGUniverse svg=new SVGUniverse();
-		InputStream svgIn=source.getInputStream();
+		InputStream svgIn=source.openInput();
 		try {
 			svg.loadSVG(svgIn, ap.getBaseName());
 		} finally {
@@ -64,7 +65,7 @@ public class SvgRenderResourceFilter extends ResourceFilter {
 		Iterator<ImageWriter> iter=ImageIO.getImageWritersBySuffix(renderFormat);
 		if (!iter.hasNext()) return null;	// Not found
 		
-		ByteArrayOutputStream buffer=new ByteArrayOutputStream(65535);
+		BlockOutputStream buffer=new BlockOutputStream();
 		ImageWriter imageWriter=iter.next();
 		try {
 			ImageOutputStream iout=ImageIO.createImageOutputStream(buffer);
@@ -75,8 +76,7 @@ public class SvgRenderResourceFilter extends ResourceFilter {
 			imageWriter.dispose();
 		}
 		
-		BufferAssetLocator ret=new BufferAssetLocator();
-		ret.setBuffer(buffer.toByteArray());
+		BufferAssetLocator ret=new BufferAssetLocator(buffer);
 		ret.setContentType(mimeType);
 		ret.setShouldCache(true);
 		
