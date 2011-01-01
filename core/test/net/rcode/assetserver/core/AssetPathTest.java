@@ -1,9 +1,6 @@
 package net.rcode.assetserver.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
@@ -29,12 +26,12 @@ public class AssetPathTest {
 		
 		// Test a non-trival mount and path
 		p=new AssetPath(dummyMount, null, "/");
-		assertTrue(p.isValid());
 		assertTrue(Arrays.equals(new Object[] { }, p.getMountPointComponents()));
 		assertTrue(Arrays.equals(new Object[] { }, p.getPathComponents()));
 		assertEquals(null, p.getBaseName());
 		assertEquals(null, p.getMountPoint());
 		assertEquals("/", p.getPath());
+		assertEquals("", p.getFullPath());
 		assertNull(p.getParameterString());
 		assertEquals(dummyMount, p.getMount());
 	}
@@ -45,12 +42,12 @@ public class AssetPathTest {
 		
 		// Test a non-trival mount and path
 		p=new AssetPath(dummyMount, "/cdn", "/some/file.txt");
-		assertTrue(p.isValid());
 		assertTrue(Arrays.equals(new Object[] { "cdn" }, p.getMountPointComponents()));
 		assertTrue(Arrays.equals(new Object[] { "some", "file.txt" }, p.getPathComponents()));
 		assertEquals("file.txt", p.getBaseName());
 		assertEquals("/cdn", p.getMountPoint());
 		assertEquals("/some/file.txt", p.getPath());
+		assertEquals("/cdn/some/file.txt", p.getFullPath());
 		assertNull(p.getParameterString());
 		assertEquals(dummyMount, p.getMount());
 	}
@@ -61,11 +58,11 @@ public class AssetPathTest {
 		
 		// Test a non-trival mount and path
 		p=new AssetPath(dummyMount, "/cdn", "/some/file$name=value&other=some$.txt");
-		assertTrue(p.isValid());
 		assertTrue(Arrays.equals(new Object[] { "cdn" }, p.getMountPointComponents()));
 		assertTrue(Arrays.equals(new Object[] { "some", "file.txt" }, p.getPathComponents()));
 		assertEquals("file.txt", p.getBaseName());
 		assertEquals("/cdn", p.getMountPoint());
+		assertEquals("/cdn/some/file.txt", p.getFullPath());
 		assertEquals("/some/file$name=value&other=some$.txt", p.getPath());
 		assertEquals("name=value&other=some", p.getParameterString());
 		assertEquals(dummyMount, p.getMount());
@@ -97,7 +94,11 @@ public class AssetPathTest {
 	}
 	
 	private void assertInvalid(String mountPoint, String path) {
-		AssetPath ap=new AssetPath(dummyMount, mountPoint, path);
-		assertFalse("Expected invalid for '" + mountPoint + "', '" + path + "'", ap.isValid());
+		try {
+			AssetPath ap=new AssetPath(dummyMount, mountPoint, path);
+			fail("Expected invalid for '" + mountPoint + "', '" + path + "'");
+		} catch (IllegalArgumentException e) {
+			// Expect exception
+		}
 	}
 }

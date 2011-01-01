@@ -151,9 +151,12 @@ public class AssetRoot {
 			}
 			AssetMount mount=mountPoints.get(mountPoint);
 			if (mount!=null) {
-				AssetPath path=new AssetPath(mount, mountPoint, mountPath);
-				if (!path.isValid()) return null;
-				else return path;
+				try {
+					return new AssetPath(mount, mountPoint, mountPath);
+				} catch (IllegalArgumentException e) {
+					server.getLogger().warn("Illegal path '" + fullPath + "': " + e.getMessage());
+					return null;
+				}
 			}
 		}
 		return null;

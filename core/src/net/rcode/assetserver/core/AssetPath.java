@@ -50,6 +50,13 @@ public class AssetPath {
 	private AssetMount mount;
 	
 	/**
+	 * The reconstructed canonical path of this asset, including the mount point and local
+	 * path components.  Always has a leading slash but will never have a trailing slash
+	 * unless if it is the resource root, in which case it will be "/".
+	 */
+	private String fullPath;
+	
+	/**
 	 * The mount point (path prefix) of the owning mount.  This will always include the
 	 * leading, but not the trailing slash of the prefix unless if it is the root path,
 	 * in which case, it just the empty string.
@@ -77,22 +84,29 @@ public class AssetPath {
 	private String parameterString;
 	
 	/**
-	 * Flag indicating whether the path is syntactically valid
-	 */
-	private boolean valid;
-	
-	/**
 	 * If null, then parameters have not yet been parsed.
 	 */
 	private Map<String, String> parameters;
 	
-	public AssetPath(AssetMount mount, String mountPoint, String path) {
+	public AssetPath(AssetMount mount, String mountPoint, String path) throws IllegalArgumentException {
 		this.mount=mount;
 		this.mountPoint=mountPoint;
 		this.path=path;
-		valid=true;
 		this.mountPointComponents=parseComponents(mountPoint, false);
 		this.pathComponents=parseComponents(path, true);
+		
+		// Reassemble the path
+		StringBuilder pathBuilder=new StringBuilder(path.length() + (mountPoint==null ? 0 : mountPoint.length()) + 50);
+		joinPath(pathBuilder, mountPointComponents);
+		joinPath(pathBuilder, pathComponents);
+		fullPath=pathBuilder.toString();
+	}
+	
+	/**
+	 * @return the canonical, reconstructed path including the mount point and path
+	 */
+	public String getFullPath() {
+		return fullPath;
 	}
 	
 	/**
@@ -107,7 +121,7 @@ public class AssetPath {
 	/**
 	 * Initializes the derived fields of this class
 	 */
-	private String[] parseComponents(String p, boolean scanForParameters) {
+	private String[] parseComponents(String p, boolean scanForParameters) throws IllegalArgumentException {
 		if (p==null || p.isEmpty()) {
 			// Valid but empty path
 			return EMPTY_STRINGS;
@@ -115,8 +129,7 @@ public class AssetPath {
 		
 		// Path must start with a slash
 		if (!p.startsWith("/")) {
-			valid=false;
-			return EMPTY_STRINGS;
+			throw new IllegalArgumentException("Path must start with a leading slash");
 		} else {
 			// Strip the leading slash off so as to split properly
 			p=p.substring(1);
@@ -144,17 +157,13 @@ public class AssetPath {
 	}
 	
 	/**
-	 * Normalize a single path component.  Sets valid=false if not valid.
+	 * Normalize a single path component.  Sets valid=false if not valid.  The component
+	 * is not checked for syntactic validity in this step.  That is done just once
+	 * later when reconstructing the path.
 	 * @param comp
 	 * @param baseName if true, then the parameter string is extracted and stored
 	 */
 	private String normalizeComponent(String comp, boolean scanForParameters) {
-		// If empty, reject
-		if (comp.isEmpty()) {
-			valid=false;
-			return comp;
-		}
-		
 		// Extract parameters
 		if (scanForParameters) {
 			Matcher paramMatcher=PARAMSTRING_PATTERN.matcher(comp);
@@ -170,16 +179,6 @@ public class AssetPath {
 			comp=URLDecoder.decode(comp, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
-		}
-		
-		// See if any of the invalid bits are found in the string
-		if (INVALID_COMPONENT_SPANS.matcher(comp).find()) {
-			valid=false;
-		}
-
-		// See if the whole pattern matches any of the invalid patterns
-		if (INVALID_COMPONENT.matcher(comp).matches()) {
-			valid=false;
 		}
 		
 		return comp;
@@ -209,10 +208,6 @@ public class AssetPath {
 		return parameterString;
 	}
 
-	public boolean isValid() {
-		return valid;
-	}
-	
 	// Parameter access
 	public String getParameter(String name) {
 		initParameters();
@@ -258,5 +253,42 @@ public class AssetPath {
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	/**
+	 * Adds components to a (possibly empty) StringBuilder, preserving the rules that
+	 * the path always starts with a slash and never ends with a slash.  The root path
+	 * is represented as an empty string.
+	 * @param dest
+	 * @param components
+	 * @throws IllegalArgumentException if the components contain illegal strings
+	 */
+	public static void joinPath(StringBuilder dest, String... components) throws IllegalArgumentException {
+		for (String component: components) {
+			if (component==null || component.isEmpty() || !isValidComponent(component)) {
+				throw new IllegalArgumentException("The path component '" + component + "' is not valid");
+			}
+			dest.append('/');
+			dest.append(component);
+		}
+	}
+	
+	/**
+	 * Return true if the given path component is syntactically legal
+	 * @param component
+	 * @return true if the given component is legal
+	 */
+	public static boolean isValidComponent(String component) {
+		// See if any of the invalid bits are found in the string
+		if (INVALID_COMPONENT_SPANS.matcher(component).find()) {
+			return false;
+		}
+
+		// See if the whole pattern matches any of the invalid patterns
+		if (INVALID_COMPONENT.matcher(component).matches()) {
+			return false;
+		}
+		
+		return true;
 	}
 }

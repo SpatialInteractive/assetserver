@@ -7,7 +7,7 @@ package net.rcode.assetserver.core;
  */
 public interface AssetPredicate {
 	/**
-	 * 
+	 * Return true or false based on whether the predicate matches
 	 * @param assetPath
 	 * @return true if the predicate passes
 	 */
