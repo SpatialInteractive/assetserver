@@ -1,5 +1,7 @@
 package net.rcode.assetserver.core;
 
+import net.rcode.assetserver.util.NamePattern;
+
 public class NamePatternPredicate implements AssetPredicate{
 	private NamePattern pattern;
 	

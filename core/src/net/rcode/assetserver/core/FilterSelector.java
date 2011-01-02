@@ -3,6 +3,8 @@ package net.rcode.assetserver.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.rcode.assetserver.util.NamePattern;
+
 /**
  * Contains a list of pairs of AssetPredicate and ResourceFilter.
  * Used to populate a FilterChain based on the resource being processed.

@@ -1,4 +1,4 @@
-package net.rcode.assetserver.core;
+package net.rcode.assetserver.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +49,23 @@ public class NamePattern {
 	private volatile Pattern matchExpression;
 	private List<String> rawClauses=new ArrayList<String>();
 	private boolean frozen;
+	
+	/**
+	 * 
+	 * @param name
+	 * @return true if the name contains characters that should be interpreted by an instance
+	 * of this class (instead of as a literal)
+	 */
+	public static boolean containsMetaChars(String name) {
+		return GLOB_SPLIT.matcher(name).find();
+	}
+	
+	public NamePattern() {
+	}
+	
+	public NamePattern(String pattern) {
+		include(pattern);
+	}
 	
 	public NamePattern(String... patterns) {
 		for (String pattern: patterns) {
@@ -107,6 +124,10 @@ public class NamePattern {
 		ret=Pattern.compile(s.toString());
 		matchExpression=ret;
 		return ret;
+	}
+	
+	public Pattern getPattern() {
+		return compilePattern();
 	}
 	
 	static {

@@ -1,4 +1,6 @@
-package net.rcode.assetserver.core;
+package net.rcode.assetserver.util;
+
+import net.rcode.assetserver.util.NamePattern;
 
 import org.junit.Test;
 import static org.junit.Assert.*;

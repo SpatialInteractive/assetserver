@@ -10,6 +10,7 @@ import net.rcode.assetserver.cache.CacheEntry;
 import net.rcode.assetserver.cache.CacheIdentity;
 import net.rcode.assetserver.cache.FileCacheDependency;
 import net.rcode.assetserver.util.IOUtil;
+import net.rcode.assetserver.util.NamePattern;
 
 /**
  * Serves assets off of a directory on the file system.  This also serves
