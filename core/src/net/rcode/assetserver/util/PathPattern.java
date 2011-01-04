@@ -25,15 +25,16 @@ public class PathPattern {
 	 */
 	private static final String M_NAMEPATTERN="<NAMEPATTERN>";
 	
-	private String pattern;
 	private String[] matchComponents;
 	private Object[] matchAux;
 	private NamePattern excludes=NamePattern.DEFAULT_EXCLUDES;
 	
 	public PathPattern(String pattern) {
-		this.pattern=pattern;
-
-		matchComponents=SLASH_PATTERN.split(trimSlashes(pattern));
+		this(SLASH_PATTERN.split(trimSlashes(pattern)));
+	}
+	
+	public PathPattern(String[] patternComponents) {
+		matchComponents=patternComponents.clone();
 		matchAux=new Object[matchComponents.length];
 		for (int i=0; i<matchComponents.length; i++) {
 			String comp=matchComponents[i];
@@ -49,6 +50,70 @@ public class PathPattern {
 		}
 	}
 	
+	/**
+	 * 
+	 * @param pattern
+	 * @return true if the pattern represents a path (contains slashes).  Otherwise, treat as
+	 * a name pattern
+	 */
+	public static boolean isPathPattern(String pattern) {
+		return pattern.indexOf('/')>=0;
+	}
+	
+	/**
+	 * Convenience method for splitting a path into components
+	 * @param input
+	 * @return array of components
+	 */
+	public static String[] splitComponents(String input) {
+		input=trimSlashes(input);
+		return SLASH_PATTERN.split(input);
+	}
+	
+	/**
+	 * Return the length of components that form the prefix of the pattern.
+	 * The prefix is the part of the pattern that contain only literal
+	 * components.
+	 * 
+	 * @param components
+	 * @return number of components at the start of the array that form the prefix
+	 */
+	public static int findPrefix(String[] components) {
+		for (int i=0; i<components.length; i++) {
+			if (!isLiteralComponents(components[i])) {
+				return i;
+			}
+		}
+		
+		return components.length;
+	}
+	
+	/**
+	 * @return true if the given path component has no special meaning and should be
+	 * considered a literal
+	 */
+	public static boolean isLiteralComponents(String component) {
+		return !component.equals("**") && !NamePattern.containsMetaChars(component);
+	}
+
+	/**
+	 * Join path components together such that if there are any components specified,
+	 * the resulting path will start with a slash but never end with a slash.
+	 * 
+	 * @param components
+	 * @return joined path
+	 */
+	public static String joinComponents(String[] components, int from, int length) {
+		StringBuilder sb=new StringBuilder(256);
+		for (int i=from; i<(length+from); i++) {
+			String c=components[i];
+			sb.append('/');
+			sb.append(c);
+		}
+		
+		return sb.toString();
+	}
+	
 	public NamePattern getExcludes() {
 		return excludes;
 	}
@@ -57,11 +122,7 @@ public class PathPattern {
 		this.excludes = excludes;
 	}
 	
-	public String getPattern() {
-		return pattern;
-	}
-	
-	private String trimSlashes(String in) {
+	private static String trimSlashes(String in) {
 		if (in.startsWith("/")) in=in.substring(1);
 		if (in.endsWith("/")) in=in.substring(0, in.length()-1);
 		return in;
