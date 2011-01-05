@@ -1,6 +1,5 @@
 package net.rcode.assetserver.ejs;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;

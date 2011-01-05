@@ -10,7 +10,7 @@ package net.rcode.assetserver.core;
  * @author stella
  *
  */
-public abstract class ResourceFilter {
+public abstract class ResourceFilter implements FilterChainInitializer {
 	private String id;
 	
 	protected ResourceFilter(String id) {
@@ -19,6 +19,15 @@ public abstract class ResourceFilter {
 	
 	public String getId() {
 		return id;
+	}
+	
+	/**
+	 * Base class implementation adds this to the end of the filters list
+	 * of the chain
+	 */
+	@Override
+	public void initializeChain(FilterChain chain) {
+		chain.getFilters().addLast(this);
 	}
 	
 	/**
