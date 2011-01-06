@@ -83,4 +83,8 @@ public class SvgRenderResourceFilter extends ResourceFilter {
 		return ret;
 	}
 
+	@Override
+	public String toString() {
+		return "SVG Render Filter";
+	}
 }

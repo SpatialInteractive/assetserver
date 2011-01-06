@@ -1,17 +1,17 @@
 package net.rcode.assetserver.core;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Map;
+
+import net.rcode.assetserver.cache.Cache;
+import net.rcode.assetserver.ejs.EjsRuntime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.rcode.assetserver.cache.Cache;
-import net.rcode.assetserver.ejs.EjsResourceFilter;
-import net.rcode.assetserver.ejs.EjsRuntime;
-import net.rcode.assetserver.optimizer.YuiOptimizeCssResourceFilter;
-import net.rcode.assetserver.optimizer.YuiOptimizeJsResourceFilter;
-import net.rcode.assetserver.svg.SvgRenderResourceFilter;
 
 /**
  * Sets up an assetserver instance.  This class is used at initialization time
@@ -21,7 +21,9 @@ import net.rcode.assetserver.svg.SvgRenderResourceFilter;
  *
  */
 public class AssetServer {
-	public static final String CONFIG_NAME="asconfig.js";
+	public static final String CONFIG_NAME=".asconfig";
+	public static final String ACCESS_NAME=".asaccess";
+	
 	public static final Logger logger=LoggerFactory.getLogger("assetserver");
 	
 	private EjsRuntime javascriptRuntime;
@@ -29,13 +31,13 @@ public class AssetServer {
 	private File configFile;
 	private String defaultTextFileEncoding="UTF-8";
 	
+	private ResourceContextManager contextManager;
 	private AssetRoot root;
 	private MimeMapping mimeMapping;
 	private File sharedCacheLocation;
 	private Cache sharedCache;
 	
 	private ServerConfig config;
-	private FilterSelector rootFilterSelector=new FilterSelector();
 	
 	public AssetServer(File location) throws IllegalArgumentException, IOException {
 		this.config=new ServerConfig();
@@ -50,6 +52,48 @@ public class AssetServer {
 		setSharedCacheLocation(new File(configDirectory, ".cache"));
 		
 		root=new AssetRoot(this);
+		
+		// Initialize the context builder and the root context
+		ResourceContextBuilder contextBuilder=new ResourceContextBuilder();
+		ResourceContext rootContext=new ResourceContext(null);
+		FilterChainInitializerLookup filterLookup=new FilterChainInitializerLookup();
+		filterLookup.addBuiltins();
+		
+		rootContext.setFilterLookup(filterLookup);
+		
+		// Initialize with server defaults
+		Reader defaultsReader=new InputStreamReader(getClass().getResourceAsStream("asconfig-defaults.js"), "UTF-8");
+		try {
+			contextBuilder.evaluateServerConfig(rootContext, this, defaultsReader, "asconfig-defaults.js");
+		} finally {
+			defaultsReader.close();
+		}
+		
+		// See if we have an asconfig
+		if (configFile.isFile()) {
+			// Load the root configuration
+			logger.info("Loading server configuration from " + configFile);
+			Reader configReader=new InputStreamReader(new FileInputStream(configFile), "UTF-8");
+			try {
+				contextBuilder.evaluateServerConfig(rootContext, this, configReader, configFile.toString());
+			} finally {
+				configReader.close();
+			}
+		} else {
+			// Setup a default mount configuration (single directory mount)
+			// and let the mount handler process asaccess files
+			logger.info("No server configuration file found: " + configFile);
+		}
+		
+		// If no mounts, then add one
+		if (root.getMountPoints().isEmpty()) {
+			logger.info("No mounts configured. Setting up directory " + configDirectory + " as server root.");
+			ResourceMount rootMount=new ResourceMount(configDirectory, this);
+			root.add("/", rootMount);
+		}
+		
+		// And put it all together with the ResourceContextManager
+		contextManager=new ResourceContextManager(rootContext, contextBuilder);
 	}
 	
 	public Logger getLogger() {
@@ -64,29 +108,10 @@ public class AssetServer {
 		this.defaultTextFileEncoding = defaultTextFileEncoding;
 	}
 	
-	public FilterSelector getRootFilterSelector() {
-		return rootFilterSelector;
+	public ResourceContextManager getContextManager() {
+		return contextManager;
 	}
 	
-	/**
-	 * Perform a simple setup.
-	 * @throws IOException 
-	 */
-	public void setupSimple() throws IOException {
-		logger.info("Setting up server defaults for location " + configDirectory);
-		ResourceMount rootMount=new ResourceMount(configDirectory, this);
-		root.add("/", rootMount);
-		
-		EjsResourceFilter ejs=new EjsResourceFilter();
-		rootFilterSelector.add("*.html", ejs);
-		rootFilterSelector.add("*.js", ejs);
-		rootFilterSelector.add("*.css", ejs);
-		
-		rootFilterSelector.add("*.svg", new SvgRenderResourceFilter());
-		
-		rootFilterSelector.add("*.js", new YuiOptimizeJsResourceFilter());
-		rootFilterSelector.add("*.css", new YuiOptimizeCssResourceFilter());
-	}
 	
 	/**
 	 * The location of the shared cache or null if no caching.  The default will be the
@@ -171,5 +196,34 @@ public class AssetServer {
 
 	private void initializeJavaScriptRuntime() {
 		javascriptRuntime.loadLibraryStd();
+	}
+	
+	public CharSequence summarizeConfiguration() {
+		StringBuilder out=new StringBuilder(512);
+		out.append("Mounts:\n");
+		for (Map.Entry<String,AssetMount> entry: root.getMountPoints().entrySet()) {
+			out.append("  ");
+			if (entry.getKey()==null) out.append("/");
+			else out.append(entry.getKey());
+			out.append(" => ");
+			out.append(entry.getValue().toString());
+			out.append('\n');
+		}
+		
+		int i=1;
+		out.append("Root Filters:\n");
+		for (ResourceContext.FilterBinding binding: contextManager.getRootContext().getFilters()) {
+			out.append("  ");
+			out.append(String.valueOf(i));
+			out.append(". ");
+			out.append(binding.predicate.toString());
+			out.append(" => ");
+			out.append(binding.initializer.toString());
+			out.append('\n');
+			
+			i+=1;
+		}
+		
+		return out;
 	}
 }

@@ -19,6 +19,8 @@ var core=Packages.net.rcode.assetserver.core,
 	FilterBinding=ResourceContext.FilterBinding,
 	PatternPredicateFactory=core.PatternPredicateFactory;
 	
+
+// Utilities
 /**
  * Finds a filter by id or class.  If looking by id,
  * prepend the argument with a '#'.  Raises an error
@@ -26,7 +28,7 @@ var core=Packages.net.rcode.assetserver.core,
  * variable arguments and returns the first valid
  * filter, raising an error if none are found.
  */
-function filter(/* names */) {
+function lookup(/* names */) {
 	var i, name, instance;
 	for (i=0; i<arguments.length; i++) {
 		name=arguments[i];
@@ -39,14 +41,13 @@ function filter(/* names */) {
 			Array.prototype.join.call(arguments, ',') + ']');
 }
 
-// Utilities
 function instantiateFilter(spec) {
 	var type=typeof spec;
 	if (type === 'string') {
-		return filter(spec);
+		return lookup(spec);
 	} else if (type === 'object') {
 		if (spec instanceof Array) {
-			return filter.apply(null, spec);
+			return lookup.apply(null, spec);
 		} else if (spec instanceof FilterChainInitializer) {
 			return spec;
 		}
@@ -73,7 +74,12 @@ function instantiatePattern(spec) {
 	throw new Error('Unrecognized pattern spec: ' + spec);
 }
 
+function filter(/* names */) {
+}
+
+
 // Methods of filter
+filter.lookup=lookup;
 filter.on=function(/* patterns..., filter */) {
 	if (arguments.length===0) return;
 

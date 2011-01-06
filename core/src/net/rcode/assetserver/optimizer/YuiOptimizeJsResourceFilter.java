@@ -47,4 +47,8 @@ public class YuiOptimizeJsResourceFilter extends ResourceFilter {
 		return ret;
 	}
 
+	@Override
+	public String toString() {
+		return "YUI JavaScript Optimizer";
+	}
 }

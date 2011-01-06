@@ -62,18 +62,18 @@ public class ServeCommand extends MainCommand {
 			syntaxError("Expected a single location");
 			return;
 		}
-		
-		// Instantiate the server
-		File configLocation=new File(arguments.get(0));
-		AssetServer server=new AssetServer(configLocation);
-		
+
 		// Print version banner
 		VersionInfo version=VersionInfo.INSTANCE;
 		AssetServer.logger.info("Starting assetserver version " + version.getBuildVersion() +
 				" (built at " + version.getBuildTime() + " on " + version.getBuildHost() + " by " + version.getBuildUser() + ")");
 		
-		// Setup
-		server.setupSimple();
+
+		// Instantiate the server
+		File configLocation=new File(arguments.get(0));
+		AssetServer server=new AssetServer(configLocation);
+		
+		AssetServer.logger.info("Configuration summary:\n" + server.summarizeConfiguration());
 		
 		JettyServer http=new JettyServer(server);
 		Object bindAddress=optionSet.valueOf("bind");
@@ -85,7 +85,6 @@ public class ServeCommand extends MainCommand {
 		}
 		
 		http.setHttpPort(((Integer)optionSet.valueOf("http")).intValue());
-		
 		try {
 			http.start();
 		} catch (BindException e) {

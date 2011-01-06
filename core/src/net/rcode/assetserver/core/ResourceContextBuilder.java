@@ -26,7 +26,19 @@ import org.slf4j.LoggerFactory;
 public class ResourceContextBuilder {
 	private final Logger logger=LoggerFactory.getLogger("contextbuilder");
 	private Scriptable nativeScope;
-	private Scriptable libScope;
+	
+	/**
+	 * Scope used to evaluate ResourceContext configuration.
+	 * This scope is initialized by evaluating resourcecontext-runtime.js
+	 */
+	private Scriptable contextScope;
+	
+	/**
+	 * Scope used to evaluate server configuraiton.  Inherits from contextScope.
+	 * This scope is initialized by evaluating serverconfig-runtime.js
+	 */
+	private Scriptable serverScope;
+	
 	private ConfigurableContextFactory contextFactory=new ConfigurableContextFactory();
 	
 	private Context enter() {
@@ -43,25 +55,24 @@ public class ResourceContextBuilder {
 		try {
 			// Initialize scopes
 			nativeScope=cx.initStandardObjects(null, true);
-			libScope=cx.newObject(nativeScope);
-			libScope.setParentScope(null);
-			libScope.setPrototype(nativeScope);
+			contextScope=cx.newObject(nativeScope);
+			contextScope.setParentScope(null);
+			contextScope.setPrototype(nativeScope);
+			
+			serverScope=cx.newObject(nativeScope);
+			serverScope.setParentScope(null);
+			serverScope.setPrototype(contextScope);
 			
 			// Set common globals
-			ScriptableObject.putProperty(libScope, "logger", logger);
-			ScriptableObject.putProperty(libScope, "context", null);
-		} finally {
-			exit();
-		}
+			ScriptableObject.putProperty(contextScope, "logger", logger);
+			ScriptableObject.putProperty(contextScope, "context", null);
 
-		// Reload the context with a dynamic scope
-		// Load runtime library
-		cx=enter();
-		try {
-			loadLibResource(cx, "resourcecontext-runtime.js");
+			loadLibResource(cx, contextScope, "resourcecontext-runtime.js");
+			loadLibResource(cx, serverScope, "serverconfig-runtime.js");
 			
 			// Freeze
-			((ScriptableObject)libScope).sealObject();
+			((ScriptableObject)contextScope).sealObject();
+			((ScriptableObject)serverScope).sealObject();
 		} finally {
 			exit();
 		}
@@ -71,13 +82,13 @@ public class ResourceContextBuilder {
 	 * Load a library into the context
 	 * @param string
 	 */
-	private void loadLibResource(Context cx, String resource) {
+	private void loadLibResource(Context cx, Scriptable scope, String resource) {
 		try {
 			InputStream in=getClass().getResourceAsStream(resource);
 			if (in==null) throw new RuntimeException("Resource not found: " + resource);
 			Reader reader=new BufferedReader(new InputStreamReader(in, "UTF-8"));
 			try {
-				cx.evaluateReader(libScope, reader, resource, 1, null);
+				cx.evaluateReader(scope, reader, resource, 1, null);
 			} finally {
 				reader.close();
 			}
@@ -92,9 +103,9 @@ public class ResourceContextBuilder {
 	 * @param script
 	 * @param sourceName
 	 */
-	public void buildContext(ResourceContext target, String script, String sourceName) {
+	public void evaluateAsAccess(ResourceContext target, String script, String sourceName) {
 		try {
-			buildContext(target, new StringReader(script), sourceName);
+			evaluateAsAccess(target, new StringReader(script), sourceName);
 		} catch (IOException e) {
 			throw new RuntimeException("Unexpected IO exception evaluating string", e);
 		}
@@ -108,14 +119,38 @@ public class ResourceContextBuilder {
 	 * @param sourceName
 	 * @throws IOException 
 	 */
-	public void buildContext(ResourceContext target, Reader script, String sourceName) throws IOException {
+	public void evaluateAsAccess(ResourceContext target, Reader script, String sourceName) throws IOException {
 		Context cx=enter();
 		try {
-			Scriptable evalScope=cx.newObject(libScope);
+			Scriptable evalScope=cx.newObject(contextScope);
 			evalScope.setParentScope(null);
-			evalScope.setPrototype(libScope);
+			evalScope.setPrototype(contextScope);
 			
 			ScriptableObject.putProperty(evalScope, "context", target);
+			cx.evaluateReader(evalScope, script, sourceName, 1, null);
+		} finally {
+			exit();
+		}
+	}
+	
+	/**
+	 * Configure the server and rootContext with the given script
+	 * @param rootContext
+	 * @param server
+	 * @param script
+	 * @param sourceName
+	 * @throws IOException
+	 */
+	public void evaluateServerConfig(ResourceContext rootContext, AssetServer server, Reader script, String sourceName) throws IOException {
+		Context cx=enter();
+		try {
+			Scriptable evalScope=cx.newObject(serverScope);
+			evalScope.setParentScope(null);
+			evalScope.setPrototype(serverScope);
+			
+			ScriptableObject.putProperty(evalScope, "context", rootContext);
+			ScriptableObject.putProperty(evalScope, "server", server);
+			
 			cx.evaluateReader(evalScope, script, sourceName, 1, null);
 		} finally {
 			exit();

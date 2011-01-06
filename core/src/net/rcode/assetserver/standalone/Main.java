@@ -10,6 +10,8 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import net.rcode.assetserver.core.AssetServer;
+
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -60,20 +62,30 @@ public class Main {
 			else break;
 		}
 		
+		String commandStr, commandClassName;
+		String[] overallArgs;
+		String[] commandArgs;
+		boolean showDefaultWarning=false;
+		
 		if (i>=args.length) {
-			overallUsage("Expected a command");
-			System.exit(1);
+			// There was no command given.  We default to starting the server for the
+			// current directory.   
+			commandStr="serve";
+			overallArgs=sliceArray(args, 0, i);
+			commandArgs=new String[] { "." };
+			showDefaultWarning=true;	// Write a warning about defaults after logging initialized
+		} else {
+			commandStr=args[i];
+			overallArgs=sliceArray(args, 0, i);
+			commandArgs=sliceArray(args, i+1, args.length);
 		}
 		
-		String commandStr=args[i];
-		String commandClassName=commandClassNames.get(commandStr);
+		commandClassName=commandClassNames.get(commandStr);
 		if (commandClassName==null) {
 			overallUsage("Unrecognied command '" + commandStr + "'");
 			System.exit(1);
 		}
 		
-		String[] overallArgs=sliceArray(args, 0, i);
-		String[] commandArgs=sliceArray(args, i+1, args.length);
 		
 		// Parse the overall args
 		OptionSet overallOptions;
@@ -82,6 +94,10 @@ public class Main {
 		} catch (OptionException e) {
 			overallUsage(e.getMessage());
 			System.exit(1);
+		}
+		
+		if (showDefaultWarning) {
+			AssetServer.logger.info("No command given. Starting server out of current directory.  For help, run 'assetserver help'");
 		}
 		
 		// Load the command class

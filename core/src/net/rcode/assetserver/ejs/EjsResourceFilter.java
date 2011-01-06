@@ -69,4 +69,9 @@ public class EjsResourceFilter extends ResourceFilter {
 		return ret;
 	}
 	
+	
+	@Override
+	public String toString() {
+		return "Standard Embedded JavaScript Filter";
+	}
 }

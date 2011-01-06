@@ -28,14 +28,14 @@ public class ResourceContextBuilderTest {
 	
 	@Test
 	public void testFilterMethod() {
-		builder.buildContext(context,
-				"logger.info(String(filter('ejs')));",
+		builder.evaluateAsAccess(context,
+				"logger.info(String(filter.lookup('ejs')));",
 				"test");
 	}
 	
 	@Test
 	public void testFilterOnMethod() {
-		builder.buildContext(context, 
+		builder.evaluateAsAccess(context, 
 				"filter.on('*.js', 'ejs')",
 				"test");
 		assertEquals(1, context.getFilters().size());

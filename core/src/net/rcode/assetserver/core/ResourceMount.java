@@ -156,7 +156,7 @@ public class ResourceMount extends AssetMount {
 		
 		FilterChain chain=new FilterChain(server, assetPath, rootLocator, resolvedFile);
 		chain.getDependencies().add(new FileCacheDependency(resolvedFile));
-		initializeFilterChain(chain, resolvedFile);
+		initializeFilterChain(server.getContextManager().getRootContext(), chain, resolvedFile);
 		chain.processFilters();
 		
 		// Get the resolved locator and handle caching
@@ -187,7 +187,19 @@ public class ResourceMount extends AssetMount {
 		return IOUtil.slurpBinary(input, (int)resolvedLocator.length());
 	}
 
-	protected void initializeFilterChain(FilterChain chain, File resolvedFile) {
-		server.getRootFilterSelector().build(chain.getAssetPath(), chain);
+	protected void initializeFilterChain(ResourceContext resourceContext, FilterChain chain, File resolvedFile) {
+		AssetPath assetPath=chain.getAssetPath();
+		for (ResourceContext.FilterBinding binding: resourceContext.getFilters()) {
+			if (binding.predicate.matches(assetPath)) {
+				// Add to the chain
+				binding.initializer.initializeChain(chain);
+			}
+		}
 	}
+	
+	public String toString() {
+		return "ResourceMount(" + location + ")";
+	}
+	
+
 }
