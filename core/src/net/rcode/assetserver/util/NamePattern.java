@@ -41,7 +41,9 @@ public class NamePattern {
 		".hgsubstate",
 		".hgtags",
 		".bzr",
-		".bzrignore"
+		".bzrignore",
+		".asconfig",
+		".asaccess"
 	};
 	
 	private static final Pattern GLOB_SPLIT=Pattern.compile("\\*|\\?", Pattern.MULTILINE);
