@@ -25,6 +25,7 @@ public class ResourceContext {
 	private boolean frozen;
 	private ResourceContext parent;
 	private List<FilterBinding> filters;
+	private FilterChainInitializerLookup filterLookup;
 	
 	/**
 	 * Binds a predicate to an initializer which should be invoked if the predicate passes.
@@ -44,6 +45,23 @@ public class ResourceContext {
 	public ResourceContext(ResourceContext parent) {
 		this.parent=parent;
 		this.filters=new LinkedList<FilterBinding>();
+	}
+	
+	public FilterChainInitializerLookup getFilterLookup() {
+		return filterLookup;
+	}
+	
+	/**
+	 * Initialize the filter lookup used for this instance.  If not set,
+	 * then calls to lookupFilter will consult the parent.
+	 * TODO: The management of this hierarchy needs to be reevaluated but
+	 * is being kept for now
+	 * TODO: Given overall reevaluation, freezing is not enforced on this
+	 * at this time
+	 * @param filterLookup
+	 */
+	public void setFilterLookup(FilterChainInitializerLookup filterLookup) {
+		this.filterLookup = filterLookup;
 	}
 	
 	/**
@@ -89,6 +107,18 @@ public class ResourceContext {
 	 */
 	public List<FilterBinding> getFilters() {
 		return filters;
+	}
+	
+	public FilterChainInitializer lookupFilterInitializer(String name) {
+		FilterChainInitializer ret;
+		if (filterLookup!=null) {
+			ret=filterLookup.lookup(name);
+			if (ret!=null) return ret;
+		}
+		
+		// Check parent
+		if (parent!=null) return parent.lookupFilterInitializer(name);
+		return null;
 	}
 	
 }

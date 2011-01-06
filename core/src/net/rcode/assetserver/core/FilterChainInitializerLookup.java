@@ -1,7 +1,9 @@
 package net.rcode.assetserver.core;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,23 +36,28 @@ public class FilterChainInitializerLookup {
 	 * have a better registration scheme.
 	 */
 	public void addBuiltins() {
-		String prefix="@net.rcode.assetserver.";
+		String classPrefix="@net.rcode.assetserver.";
+		
+		// Ignore
+		alias(classPrefix + "core.IgnoreResourceFilter",
+				"#std-ignore",
+				"ignore");
 		
 		// Ejs
-		alias(prefix + "ejs.EjsResourceFilter",
+		alias(classPrefix + "ejs.EjsResourceFilter",
 				"#std-ejs",
 				"ejs");
 		
 		// Optimizers
-		alias(prefix + "optimizer.YuiOptimizeJsResourceFilter",
+		alias(classPrefix + "optimizer.YuiOptimizeJsResourceFilter",
 				"#yui-jsoptimize",
 				"jsoptimize");
-		alias(prefix + "optimizer.YuiOptimizeCssResourceFilter",
+		alias(classPrefix + "optimizer.YuiOptimizeCssResourceFilter",
 				"#yui-cssoptimize",
 				"cssoptimize");
 		
 		// Svg
-		alias(prefix + "svg.SvgRenderResourceFilter",
+		alias(classPrefix + "svg.SvgRenderResourceFilter",
 				"#std-svgrender",
 				"svgrender");
 	}
@@ -63,6 +70,53 @@ public class FilterChainInitializerLookup {
 	public void alias(String rootName, String... aliases) {
 		for (String alias: aliases) {
 			nameAliases.put(alias, rootName);
+		}
+	}
+	
+	public FilterChainInitializer lookup(String name) {
+		// Process aliases
+		String aliasedName;
+		Set<String> circularDetect=null;
+		for (;;) {
+			aliasedName=nameAliases.get(name);
+			if (aliasedName==null) break;
+			if (circularDetect==null) circularDetect=new HashSet<String>();
+			if (!circularDetect.add(name)) {
+				throw new IllegalStateException("Circular reference on filter alias " + name);
+			}
+			
+			name=aliasedName;
+		}
+		
+		// Check cache
+		FilterChainInitializer ret=instanceCache.get(name);
+		if (ret!=null) return ret;
+		
+		// Instantiate and cache
+		if (name==null || name.isEmpty()) return null;
+		if (!name.startsWith("@")) {
+			throw new IllegalStateException("Cannot instantiate non class filter " + name);
+		}
+		
+		String className=name.substring(1);
+		ret=instantiate(className);
+		instanceCache.put(name, ret);
+		
+		return ret;
+	}
+
+	protected FilterChainInitializer instantiate(String className) {
+		// TODO: This is naive handling of classloaders and needs
+		// to be updated when plugins are defined
+		try {
+			ClassLoader cl=getClass().getClassLoader();
+			Class<?> clazz=Class.forName(className, true, cl);
+			Object ret=clazz.newInstance();
+			return (FilterChainInitializer) ret;
+		} catch (ClassCastException e) {
+			throw new IllegalStateException("Filter defined by " + className + " is not an instanceof FilterChainInitializer");
+		} catch (Exception e) {
+			throw new RuntimeException("Error instantiating filter class " + className, e);
 		}
 	}
 }

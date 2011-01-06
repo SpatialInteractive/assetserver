@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 
 import net.rcode.assetserver.util.RhinoUtil.ConfigurableContextFactory;
 
@@ -37,6 +38,7 @@ public class ResourceContextBuilder {
 	}
 	
 	public ResourceContextBuilder() {
+		contextFactory.setUseDynamicScope(true);
 		Context cx=enter();
 		try {
 			// Initialize scopes
@@ -47,12 +49,20 @@ public class ResourceContextBuilder {
 			
 			// Set common globals
 			ScriptableObject.putProperty(libScope, "logger", logger);
-			
-			// Load runtime library
-			contextFactory.setUseDynamicScope(true);
-			loadLibResource(cx, "resourcecontext-runtime.js");
+			ScriptableObject.putProperty(libScope, "context", null);
 		} finally {
-			contextFactory.setUseDynamicScope(false);
+			exit();
+		}
+
+		// Reload the context with a dynamic scope
+		// Load runtime library
+		cx=enter();
+		try {
+			loadLibResource(cx, "resourcecontext-runtime.js");
+			
+			// Freeze
+			((ScriptableObject)libScope).sealObject();
+		} finally {
 			exit();
 		}
 	}
@@ -73,6 +83,42 @@ public class ResourceContextBuilder {
 			}
 		} catch (IOException e) {
 			throw new RuntimeException("IO error evaluating resource " + resource, e);
+		}
+	}
+	
+	/**
+	 * Convenience that uses a script specified as a String
+	 * @param target
+	 * @param script
+	 * @param sourceName
+	 */
+	public void buildContext(ResourceContext target, String script, String sourceName) {
+		try {
+			buildContext(target, new StringReader(script), sourceName);
+		} catch (IOException e) {
+			throw new RuntimeException("Unexpected IO exception evaluating string", e);
+		}
+	}
+	
+	/**
+	 * Build the given target context using the script to be read
+	 * from reader, using the given sourceName for debugging.
+	 * @param target
+	 * @param script Reader (not closed on completion)
+	 * @param sourceName
+	 * @throws IOException 
+	 */
+	public void buildContext(ResourceContext target, Reader script, String sourceName) throws IOException {
+		Context cx=enter();
+		try {
+			Scriptable evalScope=cx.newObject(libScope);
+			evalScope.setParentScope(null);
+			evalScope.setPrototype(libScope);
+			
+			ScriptableObject.putProperty(evalScope, "context", target);
+			cx.evaluateReader(evalScope, script, sourceName, 1, null);
+		} finally {
+			exit();
 		}
 	}
 }

@@ -6,12 +6,19 @@
  * <ul>
  * <li>logger - A Java (SLF4J) logger instance
  * <li>context - The ResourceContext being constructed
- * <li>global - The global scope (different for evaluation and runtime)
  * </ul>
  * 
  * This library provides all other bits of the api.
  */
-
+(function(global) {
+// Imports
+var core=Packages.net.rcode.assetserver.core,
+	ResourceContext=core.ResourceContext,
+	AssetPredicate=core.AssetPredicate,
+	FilterChainInitializer=core.FilterChainInitializer,
+	FilterBinding=ResourceContext.FilterBinding,
+	PatternPredicateFactory=core.PatternPredicateFactory;
+	
 /**
  * Finds a filter by id or class.  If looking by id,
  * prepend the argument with a '#'.  Raises an error
@@ -23,23 +30,70 @@ function filter(/* names */) {
 	var i, name, instance;
 	for (i=0; i<arguments.length; i++) {
 		name=arguments[i];
-		instance=lookupByName(name);
+		instance=context.lookupFilterInitializer(name);
 		if (instance) return instance;
 	}
 	
 	// If here, none found
 	throw new Error('Could not find filter with search [' +
 			Array.prototype.join.call(arguments, ',') + ']');
-	
-	function lookupByName(name) {
-		name=String(name);
-		if (name==='') return null;
-		if (name[0]==='#') {
-			// Lookup by id
-		} else if (name[0]==='@') {
-			// Lookup by Java class name
-		} else {
-			// Lookup by generic name
-		}
-	}
 }
+
+// Utilities
+function instantiateFilter(spec) {
+	var type=typeof spec;
+	if (type === 'string') {
+		return filter(spec);
+	} else if (type === 'object') {
+		if (spec instanceof Array) {
+			return filter.apply(null, spec);
+		} else if (spec instanceof FilterChainInitializer) {
+			return spec;
+		}
+	} else if (type === 'function') {
+		// TODO: Need to provide JavaScript wrapper
+		throw new Error('Function filters not yet implemented');
+	}
+	
+	throw new Error('Unrecognized filter: ' + spec);
+}
+
+function instantiatePattern(spec) {
+	var type=typeof spec;
+	if (type === 'string') {
+		// Treat as a pattern
+		return PatternPredicateFactory.build(spec);
+	} else if (type === 'object') {
+		if (spec instanceof AssetPredicate) return spec;
+	} else if (type === 'function') {
+		// TODO: Need to support JavaScript wrapper
+		throw new Error('Pattern functions not yet implemented');
+	}
+	
+	throw new Error('Unrecognized pattern spec: ' + spec);
+}
+
+// Methods of filter
+filter.on=function(/* patterns..., filter */) {
+	if (arguments.length===0) return;
+
+	var filterSpec=arguments[arguments.length-1], i,
+		patternSpec,
+		filter,
+		predicaate,
+		binding;
+	
+	filter=instantiateFilter(filterSpec);
+	
+	for (i=0; i<(arguments.length-1); i++) {
+		patternSpec=arguments[i];
+		predicate=instantiatePattern(patternSpec);
+		binding=new FilterBinding(predicate, filter);
+		context.filters.add(binding);
+	}
+};
+
+// Exports
+global.filter=filter;
+
+})(this);
