@@ -42,6 +42,7 @@ public class Main {
 		commandClassNames.put("help", CP + "HelpCommand");
 		commandClassNames.put("version", CP + "VersionCommand");
 		commandClassNames.put("serve", CP + "ServeCommand");
+		commandClassNames.put("cp", CP + "CopyCommand");
 		
 		// Init option parser
 		overallParser=new OptionParser();
@@ -144,7 +145,7 @@ public class Main {
 		if (end>=args.length) end=args.length;
 		String[] ret=new String[end-start];
 		for (int i=start; i<end; i++) {
-			ret[i-start]=args[start];
+			ret[i-start]=args[i];
 		}
 		
 		return ret;

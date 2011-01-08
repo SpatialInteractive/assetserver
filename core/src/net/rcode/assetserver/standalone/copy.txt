@@ -1,0 +1,36 @@
+Usage: 
+	assetserver cp [-options] serverroot to_directory
+	assetserver cp [-options] serverroot from_path to_file
+	assetserver cp [-options] serverroot from_path ... to_directory
+
+Process and copy files from the given server locations to arbitrary locations
+on the filesystem.  The goal of this command is to create a static snapshot
+of a dynamic directory tree that would normally be processed on the fly
+by making live http requests.  In this way, an entire tree of assets can
+be snapshotted and hosted by a static webserver with no dynamic processing.
+
+This command is intended to act similarly to the standard Unix cp command with
+the following differences:
+   1. If copying from a directory, then the copy is always done recursively
+   2. If overwriting a file, it is deleted (unlinked) first, making it stable
+      to copy directly over in-use files (at least on Unix-like systems)
+   3. If an error is encountered during copy, the operation is aborted (can
+      be changed with an option)
+
+In all forms, the serverroot parameter must be the physical location on the
+filesystem of the server root directory or .asconfig file.
+
+For the first form, the entire contents of serverroot are copied to a given
+target directory (which must already exist).
+
+For the second form, a single named resource can be copied to a location on
+the filesystem.  This form is activated if to_file is either a file or does
+not exist.
+
+The third form copies an arbitrary number of resources or directories to a
+location on the filesystem.  In this case, to_directory must exist and be
+a directory.  The basename of each from_path will be used to create a new
+file or directory in to_directory unless if the from_path ends with a slash
+(/), in which case, the contents of the resource directory will be copied
+(this would be equivilent to naming each file and directory in from_path
+on the command line).

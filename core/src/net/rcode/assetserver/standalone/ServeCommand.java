@@ -33,7 +33,7 @@ public class ServeCommand extends MainCommand {
 	
 	@Override
 	public boolean usage(PrintWriter out) throws IOException {
-		out.println("Usage: assetserver serve [options] location");
+		out.println("Usage: assetserver serve [options] serverroot");
 		out.println();
 		
 		out.println(IOUtil.slurpResource(getClass(), "serve.txt"));
