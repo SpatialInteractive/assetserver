@@ -194,7 +194,8 @@ public class AssetRoot {
 
 	/**
 	 * Scans the namespace as defined by config, invoking the given callback.
-	 * TODO: Add symlink cycle detection
+	 * TODO: Add symlink cycle detection.  Not critical right now because the ResourceMount
+	 * explicitly disallows symlinks
 	 * @param config
 	 * @param callback
 	 * @throws Exception
