@@ -179,23 +179,13 @@ public class AssetRoot {
 		Matcher m=p.matcher(assetPath.getFullPath());
 		if (m.matches()) {
 			String mountPoint;
-			String mountPath;
 			if (m.groupCount()==2) {
 				mountPoint=m.group(1);
-				mountPath=m.group(2);
 			} else {
 				mountPoint=null;
-				mountPath=m.group(1);
 			}
 			AssetMount mount=mountPoints.get(mountPoint);
 			if (mount==null || mount==assetPath.getMount()) return false;
-			if (!mount.canStat()) return true;	// Non-statable mount always overlaps
-			
-			// Statable mounts only overlap if they contain a resource
-			// of the same path
-			AssetPath checkPath=new AssetPath(mount, mountPoint, mountPath);
-			ResourceStat checkStat=mount.stat(checkPath);
-			if (checkStat==null) return false;
 			else return true;
 		} else {
 			return false;
@@ -255,6 +245,9 @@ public class AssetRoot {
 
 	private void scanDirectory(AssetPath parentPath, ScanConfig config,
 			ScanCallback callback) throws Exception {
+		// Skip resources that are overlapped by another more specific resource
+		// in another mount
+		if (overlapped(parentPath)) return;
 		if (!callback.handleDirectory(parentPath)) return;
 		
 		Collection<ResourceStat> children=parentPath.getMount().listChildren(parentPath);
