@@ -42,6 +42,9 @@ public class NamePattern {
 		".hgtags",
 		".bzr",
 		".bzrignore",
+		
+		// The following names have special meaning to the assetserver
+		".ascache",
 		".asconfig",
 		".asaccess"
 	};

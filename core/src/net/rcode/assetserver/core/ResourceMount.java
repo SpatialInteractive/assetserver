@@ -3,6 +3,9 @@ package net.rcode.assetserver.core;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import net.rcode.assetserver.cache.Cache;
 import net.rcode.assetserver.cache.CacheDependency;
@@ -88,8 +91,18 @@ public class ResourceMount extends AssetMount {
 		this.userExclusions = userExclusions;
 	}
 	
-	@Override
-	public AssetLocator resolve(AssetPath assetPath) throws Exception {
+	/**
+	 * Resolve an AssetPath to the physical file that backs it.  Return null if the path 
+	 * is invalid in some way (incorrect case, symlinks, excluded components, etc).
+	 * <p>
+	 * This method may also return null if the file does not exist, but it may return files
+	 * that do not exist.  Callers should perform their own existence checks.
+	 * 
+	 * @param assetPath
+	 * @return The backing File or null
+	 * @throws Exception
+	 */
+	private File resolveToFile(AssetPath assetPath) throws Exception {
 		// Reconstruct the path using native directory separators so that we can
 		// do a string compare with a canonical path in order to determine correctness
 		// This will not work across symbolic links.
@@ -123,11 +136,13 @@ public class ResourceMount extends AssetMount {
 			if (userExclusions!=null && userExclusions.matches(comp)) return null;
 		}
 		
-		// If here, then resolvedFile is indeed a valid canonical file.  The only other thing
-		// to check is whether the file exists
-		if (!resolvedFile.isFile()) {
-			return null;
-		}
+		return resolvedFile;
+	}
+	
+	@Override
+	public AssetLocator resolve(AssetPath assetPath) throws Exception {
+		File resolvedFile=resolveToFile(assetPath);
+		if (resolvedFile==null || !resolvedFile.isFile()) return null;
 		
 		// See if we have a valid hit in the cache
 		CacheIdentity identity=new CacheIdentity(getClass().getName(),
@@ -182,6 +197,64 @@ public class ResourceMount extends AssetMount {
 		}
 	}
 
+	@Override
+	public boolean canStat() {
+		return true;
+	}
+
+	@Override
+	public ResourceStat stat(AssetPath assetPath) throws Exception {
+		File resolvedFile=resolveToFile(assetPath);
+		if (resolvedFile==null) return null;
+		
+		ResourceStat ret=new ResourceStat();
+		ret.path=assetPath;
+		ret.physicalPath=resolvedFile;
+		ret.isDirectory=resolvedFile.isDirectory();
+		
+		// Try to do an existence check with the fewest os stat calls for the happy path
+		// I really wish Java just had a stat call instead of these hokey
+		// File methods
+		if (resolvedFile.isFile()) ret.isDirectory=false;
+		else if (resolvedFile.isDirectory()) ret.isDirectory=true;
+		else return null;
+		
+		return ret;
+	}
+
+	@Override
+	public Collection<ResourceStat> listChildren(AssetPath parentPath)
+			throws Exception {
+		ResourceStat s=stat(parentPath);
+		if (!s.isDirectory) return Collections.emptySet();
+		
+		File parentFile=s.physicalPath;
+		String[] childNames=parentFile.list();
+		if (childNames==null || childNames.length==0) return Collections.emptySet();
+		
+		Collection<ResourceStat> ret=new ArrayList<ResourceStat>(childNames.length);
+		for (String childName: childNames) {
+			// Check against exclusions
+			if (defaultExclusions!=null && defaultExclusions.matches(childName)) continue;
+			if (userExclusions!=null && userExclusions.matches(childName)) continue;
+			
+			AssetPath childPath=parentPath.createChild(childName);
+			if (childPath!=null) {
+				ResourceStat childStat=new ResourceStat();
+				childStat.path=childPath;
+				childStat.physicalPath=new File(parentFile, childName);
+				childStat.isDirectory=childStat.physicalPath.isDirectory();
+				
+				// TODO: Process associated resources
+				childStat.associatedResources=null;
+				
+				ret.add(childStat);
+			}
+		}
+		
+		return ret;
+	}
+	
 	private byte[] slurpLocatorContents(AssetLocator resolvedLocator) throws IOException {
 		InputStream input=resolvedLocator.openInput();
 		return IOUtil.slurpBinary(input, (int)resolvedLocator.length());

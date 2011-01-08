@@ -3,16 +3,15 @@ package net.rcode.assetserver.standalone;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-
+import net.rcode.assetserver.core.AssetPath;
 import net.rcode.assetserver.core.AssetServer;
+import net.rcode.assetserver.core.ScanCallback;
+import net.rcode.assetserver.core.ScanConfig;
 import net.rcode.assetserver.util.IOUtil;
 
 /**
@@ -62,13 +61,45 @@ public class CopyCommand extends MainCommand {
 		
 		String serverRoot=arguments.get(0);
 		String toLocation=arguments.get(arguments.size()-1);
-		List<String> fromPath=arguments.subList(1, arguments.size()-1);
+		List<String> fromPaths=arguments.subList(1, arguments.size()-1);
 		
 		// Boot up the server
 		File configLocation=new File(serverRoot);
 		AssetServer server=new AssetServer(configLocation);
 		
-		
+		ScanConfig config=new ScanConfig();
+		if (fromPaths.isEmpty()) {
+			// Trivial - copy entire namespace
+			File targetDir=new File(toLocation);
+			if (!targetDir.isDirectory()) {
+				fail("The target directory '" + targetDir + "' does not exist.");
+				return;
+			}
+			
+			config.setBaseDir("/");
+			config.setRecursive(true);
+			
+			server.getRoot().scan(config, new ScanCallback() {
+				
+				@Override
+				public boolean handleDirectory(AssetPath path) throws Exception {
+					System.out.println("SCAN: handleDirectory(" + path + ")");
+					return true;
+				}
+				
+				@Override
+				public boolean handleAsset(AssetPath path)
+						throws Exception {
+					System.out.println("SCAN: handleAsset(" + path + ")");
+					return true;
+				}
+			});
+		}
+	}
+	
+	private void fail(String msg) {
+		System.err.println("ERROR: " + msg);
+		System.exit(10);
 	}
 
 }

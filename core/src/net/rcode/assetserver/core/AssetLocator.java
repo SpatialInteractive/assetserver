@@ -1,8 +1,5 @@
 package net.rcode.assetserver.core;
 
-import java.io.IOException;
-import java.io.InputStream;
-
 import net.rcode.assetserver.util.BufferAccessor;
 
 /**

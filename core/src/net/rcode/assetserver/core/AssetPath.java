@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * @author stella
  *
  */
-public class AssetPath {
+public class AssetPath implements Cloneable {
 	static final String[] EMPTY_STRINGS=new String[0];
 	static final Pattern PATH_SPLIT_PATTERN=Pattern.compile("\\/");
 	/**
@@ -96,10 +96,36 @@ public class AssetPath {
 		this.pathComponents=parseComponents(path, true);
 		
 		// Reassemble the path
-		StringBuilder pathBuilder=new StringBuilder(path.length() + (mountPoint==null ? 0 : mountPoint.length()) + 50);
+		StringBuilder pathBuilder=new StringBuilder((path!=null ? path.length():0) + (mountPoint==null ? 0 : mountPoint.length()) + 50);
 		joinPath(pathBuilder, mountPointComponents);
 		joinPath(pathBuilder, pathComponents);
 		fullPath=pathBuilder.toString();
+	}
+	
+	private AssetPath copy() {
+		try {
+			return (AssetPath) clone();
+		} catch (CloneNotSupportedException e) {
+			// Cannot happen
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * Return an AssetPath representing this path plus one more directory level with the given
+	 * childName
+	 * @param childName
+	 * @return the new path or null if illegal
+	 */
+	public AssetPath createChild(String childName) {
+		if (!isValidComponent(childName)) return null;
+		
+		AssetPath ret=copy();
+		ret.fullPath += '/' + childName;
+		ret.path += '/' + childName;
+		ret.pathComponents=appendArray(ret.pathComponents, childName);
+		
+		return ret;
 	}
 	
 	/**
@@ -247,7 +273,12 @@ public class AssetPath {
 		}
 	}
 
-	private String urlDecode(String value) {
+	@Override
+	public String toString() {
+		return "AssetPath(mountPoint=" + mountPoint + ", path=" + path + ")";
+	}
+	
+	private static String urlDecode(String value) {
 		try {
 			return URLDecoder.decode(value, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
@@ -290,5 +321,14 @@ public class AssetPath {
 		}
 		
 		return true;
+	}
+	
+	private static String[] appendArray(String[] in, String newElt) {
+		String[] ret=new String[in.length+1];
+		for (int i=0; i<in.length; i++) {
+			ret[i]=in[i];
+		}
+		ret[in.length]=newElt;
+		return ret;
 	}
 }

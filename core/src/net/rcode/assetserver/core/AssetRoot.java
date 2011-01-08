@@ -1,6 +1,7 @@
 package net.rcode.assetserver.core;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -72,6 +73,7 @@ public class AssetRoot {
 	}
 	
 	protected String normalizeMountPoint(String mountPoint) {
+		if (mountPoint==null) return null;
 		if (mountPoint.endsWith("/")) mountPoint=mountPoint.substring(0, mountPoint.length()-1);
 		if (mountPoint.equals("")) mountPoint=null;
 		return mountPoint;
@@ -160,5 +162,127 @@ public class AssetRoot {
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * Checks to see whether the given AssetPath can be resolved by another
+	 * mount point that is more specific than this one.
+	 * 
+	 * @param assetPath
+	 * @return true if overlapped
+	 * @throws Exception 
+	 */
+	private boolean overlapped(AssetPath assetPath) throws Exception {
+		Pattern p=getMountPattern();
+		if (p==null) return false;
+		
+		Matcher m=p.matcher(assetPath.getFullPath());
+		if (m.matches()) {
+			String mountPoint;
+			String mountPath;
+			if (m.groupCount()==2) {
+				mountPoint=m.group(1);
+				mountPath=m.group(2);
+			} else {
+				mountPoint=null;
+				mountPath=m.group(1);
+			}
+			AssetMount mount=mountPoints.get(mountPoint);
+			if (mount==null || mount==assetPath.getMount()) return false;
+			if (!mount.canStat()) return true;	// Non-statable mount always overlaps
+			
+			// Statable mounts only overlap if they contain a resource
+			// of the same path
+			AssetPath checkPath=new AssetPath(mount, mountPoint, mountPath);
+			ResourceStat checkStat=mount.stat(checkPath);
+			if (checkStat==null) return false;
+			else return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Scans the namespace as defined by config, invoking the given callback.
+	 * TODO: Add symlink cycle detection
+	 * @param config
+	 * @param callback
+	 * @throws Exception
+	 */
+	public void scan(ScanConfig config, ScanCallback callback) throws Exception {
+		String requestPath=normalizeMountPoint(config.getBaseDir());	// May be null (root)
+		
+		// Iterate over all mount points that share the given prefix
+		for (Map.Entry<String,AssetMount> mountEntry: mountPoints.entrySet()) {
+			String mountPoint=mountEntry.getKey();
+			AssetMount mount=mountEntry.getValue();
+			
+			// We are actually looking for mount points that may include prefix,
+			// so the sense of the following checks is inverted from what may be
+			// expected
+			// Note that the "/" mount point is null which makes this trickier
+			// (why oh why did I do that to myself)
+			if (requestPath==null || mountPoint==null || mountPoint.startsWith(requestPath)) {
+				// The mount may contain the prefix
+				String localPath;
+				// Determine the part of requestPath that is local to the mount
+				// and split
+				if (mountPoint==null) localPath=requestPath;
+				else if (requestPath==null) localPath=null;
+				else {
+					localPath=requestPath.substring(mountPoint.length());
+					if (localPath.isEmpty()) localPath=null;
+				}
+
+				AssetPath assetPath=new AssetPath(mount, mountPoint!=null ? mountPoint : "", localPath!=null ? localPath : "");
+				scanMount(assetPath, config, callback);
+			}
+		}
+	}
+
+	private void scanMount(AssetPath assetPath, ScanConfig config,
+			ScanCallback callback) throws Exception {
+		// Stat the path and decide what to do
+		ResourceStat stat=assetPath.getMount().stat(assetPath);
+		if (stat.isDirectory) {
+			// Traverse the directory
+			scanDirectory(assetPath, config, callback);
+		} else {
+			// Process the resource
+			scanResource(assetPath, config, stat.associatedResources, callback);
+		}
+	}
+
+	private void scanDirectory(AssetPath parentPath, ScanConfig config,
+			ScanCallback callback) throws Exception {
+		if (!callback.handleDirectory(parentPath)) return;
+		
+		Collection<ResourceStat> children=parentPath.getMount().listChildren(parentPath);
+		for (ResourceStat child: children) {
+			if (child.isDirectory) {
+				// Recusrive scan
+				scanDirectory(child.path, config, callback);
+			} else {
+				// Handle the resource
+				scanResource(child.path, config, child.associatedResources, callback);
+			}
+		}
+	}
+
+	private void scanResource(AssetPath assetPath, ScanConfig config,
+			Collection<AssetPath> associatedResources, ScanCallback callback) throws Exception {
+		// Skip resources that are overlapped by another more specific resource
+		// in another mount
+		if (overlapped(assetPath)) return;
+		
+		// Handle the root resource
+		if (callback.handleAsset(assetPath)) {
+			// Handle associated resources
+			if (associatedResources!=null) {
+				for (AssetPath assoc: associatedResources) {
+					callback.handleAsset(assoc);
+				}
+			}
+		}
 	}
 }

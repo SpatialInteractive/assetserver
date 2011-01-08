@@ -49,7 +49,7 @@ public class AssetServer {
 		mimeMapping.loadDefaults();
 		
 		setupLocation(location);
-		setSharedCacheLocation(new File(configDirectory, ".cache"));
+		setSharedCacheLocation(new File(configDirectory, ".ascache"));
 		
 		root=new AssetRoot(this);
 		
