@@ -8,7 +8,7 @@
 		
 	<property name="build.reports" location="${build.dir}/reports"/>
 	<property name="build.info" location="${build.core.classes}/net/rcode/assetserver/buildinfo.properties"/>
-	<property name="build.version" value="adhoc"/>
+	<property name="build.version" value="dev"/>
 	<property environment="env"/>
 	
 	<property name="jetty.version" value="7.2.2.v20101205"/>
@@ -220,4 +220,11 @@ build.version=${build.version}
 		<jarexec target="shell" source="${build.jar.dir}/assetserver-main.jar" dest="${build.jar.dir}/assetserver"/>
 		<jarexec target="exe" source="${build.jar.dir}/assetserver-main.jar" dest="${build.jar.dir}/assetserver.exe"/>
 	</target>
+	
+	<!-- copy the unix executable to the $HOME/bin dir.  This is just for me -->
+	<target name="install" depends="jar">
+		<copy todir="${env.HOME}/bin" file="build/assetserver"/>
+		<chmod perm="a+x" file="${env.HOME}/bin/assetserver"></chmod>
+	</target>
+
 </project>
