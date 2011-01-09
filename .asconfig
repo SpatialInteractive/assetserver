@@ -1,2 +1,3 @@
-mount('/docs', 'htdocs/docs');
+mount('/', 'documentation');
+//mount('/docs', 'documentation/docs');
 

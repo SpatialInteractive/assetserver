@@ -263,7 +263,7 @@ build.version=${build.version}
 		<!-- Generate the documentation -->
 		<mkdir dir="${dist.dir}/documentation"/>
 		<java fork="true" jar="build/assetserver" failonerror="yes">
-			<arg line="cp documentation ${dist.dir}/documentation"/>
+			<arg line="cp . ${dist.dir}/documentation"/>
 		</java>
 		
 		<!-- Make different distribution files -->
