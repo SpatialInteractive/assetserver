@@ -226,5 +226,86 @@ build.version=${build.version}
 		<copy todir="${env.HOME}/bin" file="build/assetserver"/>
 		<chmod perm="a+x" file="${env.HOME}/bin/assetserver"></chmod>
 	</target>
-
+	
+	<!-- Create a build/dist directory with the full distribution contents.  Then create
+	     zip and tarballs for different platforms by applying excludes -->
+	<target name="dist" depends="clean,jar">
+		<property name="dist.basename" value="assetserver-${build.version}"/>
+		<property name="dist.parent.dir" location="${build.dir}/dist"/>
+		<property name="dist.dir" location="${dist.parent.dir}/${dist.basename}"/>
+		
+		<echo>Building distribution ${dist.basename}</echo>
+		<mkdir dir="${dist.dir}"/>
+		
+		<!-- Copy source code -->
+		<copy todir="${dist.dir}">
+			<fileset dir=".">
+				<include name="core/**"/>
+				<include name="cphelp/**"/>
+				<include name="tools/**"/>
+				<include name="lib/**"/>
+				<include name="skeleton/**"/>
+				<include name="winlauncher/**"/>
+				
+				<!-- Files -->
+				<include name="build.xml"/>
+				<include name="CHANGELOG"/>
+				<include name="NOTICE"/>
+				<include name="LICENSE"/>
+			</fileset>
+		</copy>
+		
+		<!-- Copy binaries -->
+		<mkdir dir="${dist.dir}/bin"/>
+		<copy todir="${dist.dir}/bin" file="${build.dir}/assetserver"/>
+		<copy todir="${dist.dir}/bin" file="${build.dir}/assetserver.exe"/>
+		
+		<!-- Generate the documentation -->
+		<mkdir dir="${dist.dir}/documentation"/>
+		<java fork="true" jar="build/assetserver" failonerror="yes">
+			<arg line="cp documentation ${dist.dir}/documentation"/>
+		</java>
+		
+		<!-- Make different distribution files -->
+		<property name="download.dir" location="${build.dir}/download"/>
+		<zip destfile="${download.dir}/${dist.basename}-src.zip">
+			<fileset dir="${dist.parent.dir}">
+				<exclude name="*/bin/**"/>
+			</fileset>
+		</zip>
+		
+		<zip destfile="${download.dir}/${dist.basename}-bin-windows.zip">
+			<fileset dir="${dist.parent.dir}">
+				<exclude name="*/core/**"/>
+				<exclude name="*/cphelp/**"/>
+				<exclude name="*/tools/**"/>
+				<exclude name="*/lib/**"/>
+				<exclude name="*/skeleton/**"/>
+				<exclude name="*/winlauncher/**"/>
+				
+				<exclude name="*/build.xml"/>
+				<exclude name="*/bin/assetserver"/>
+			</fileset>
+		</zip>
+		
+		<tar destfile="${download.dir}/${dist.basename}-bin-generic.tar.gz" compression="gzip" followsymlinks="false">
+			<tarfileset dir="${dist.parent.dir}" username="root" group="root">
+				<exclude name="*/core/**"/>
+				<exclude name="*/cphelp/**"/>
+				<exclude name="*/tools/**"/>
+				<exclude name="*/lib/**"/>
+				<exclude name="*/skeleton/**"/>
+				<exclude name="*/winlauncher/**"/>
+				
+				<exclude name="*/build.xml"/>
+				<exclude name="*/bin/assetserver"/>
+				<exclude name="*/bin/assetserver.exe"/>
+			</tarfileset>
+			
+			<tarfileset dir="${dist.parent.dir}" username="root" group="root" filemode="755">
+				<include name="*/bin/assetserver"/>
+			</tarfileset>
+		</tar>
+	</target>
+	
 </project>

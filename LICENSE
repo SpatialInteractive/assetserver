@@ -1,4 +1,3 @@
-
 Use of this software is permitted under an MIT-esque license (below).
 
 Copyright (c) 2010 Stella Laurenzo
@@ -31,7 +30,3 @@ Includes portions of the following software:
  Apache Commons (http://commons.apache.org/)
  Java Servlet API (http://www.oracle.com/technetwork/java/index-jsp-135475.html)
  JOpt-simple (http://jopt-simple.sourceforge.net/)
-
-Refer to the LICENSE files in the source distribution for further
-details.
-	
