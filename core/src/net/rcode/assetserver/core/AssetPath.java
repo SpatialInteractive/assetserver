@@ -44,17 +44,13 @@ public class AssetPath implements Cloneable {
 	static final Pattern PARAMSTRING_PATTERN=
 		Pattern.compile("(?:\\$([^\\$]*)\\$)((?:\\.[A-Za-z0-9]+)+)$");
 	
+	static final Pattern EXTENSION_PATTERN=
+		Pattern.compile("((\\.[A-Za-z0-9]+)+)$");
+	
 	/**
 	 * The mount that this path is bound to
 	 */
 	private AssetMount mount;
-	
-	/**
-	 * The reconstructed canonical path of this asset, including the mount point and local
-	 * path components.  Always has a leading slash but will never have a trailing slash
-	 * unless if it is the resource root, in which case it will be "/".
-	 */
-	private String fullPath;
 	
 	/**
 	 * The mount point (path prefix) of the owning mount.  This will always include the
@@ -95,11 +91,6 @@ public class AssetPath implements Cloneable {
 		this.mountPointComponents=parseComponents(mountPoint, false);
 		this.pathComponents=parseComponents(path, true);
 		
-		// Reassemble the path
-		StringBuilder pathBuilder=new StringBuilder((path!=null ? path.length():0) + (mountPoint==null ? 0 : mountPoint.length()) + 50);
-		joinPath(pathBuilder, mountPointComponents);
-		joinPath(pathBuilder, pathComponents);
-		fullPath=pathBuilder.toString();
 	}
 	
 	private AssetPath copy() {
@@ -121,7 +112,6 @@ public class AssetPath implements Cloneable {
 		if (!isValidComponent(childName)) return null;
 		
 		AssetPath ret=copy();
-		ret.fullPath += '/' + childName;
 		ret.path += '/' + childName;
 		ret.pathComponents=appendArray(ret.pathComponents, childName);
 		
@@ -132,7 +122,20 @@ public class AssetPath implements Cloneable {
 	 * @return the canonical, reconstructed path including the mount point and path
 	 */
 	public String getFullPath() {
-		return fullPath;
+		// Reassemble the path
+		StringBuilder pathBuilder=new StringBuilder((path!=null ? path.length():0) + (mountPoint==null ? 0 : mountPoint.length()) + 50);
+		joinPath(pathBuilder, mountPointComponents);
+		joinPath(pathBuilder, pathComponents);
+		return pathBuilder.toString();
+	}
+	
+	/**
+	 * Get the full path including the parameter string.  Equivilent to getFullPath
+	 * if the parameterstring is null.  TODO: This method doesn't really do anything
+	 * @return path
+	 */
+	public String getFullParameterizedPath() {
+		return getFullPath();
 	}
 	
 	/**
@@ -184,10 +187,10 @@ public class AssetPath implements Cloneable {
 	
 	/**
 	 * Normalize a single path component.  Sets valid=false if not valid.  The component
-	 * is not checked for syntactic validity in this step.  That is done just once
-	 * later when reconstructing the path.
+	 * is checked for syntactic validity in this step.
 	 * @param comp
 	 * @param baseName if true, then the parameter string is extracted and stored
+	 * @throws IllegalArgumentException if the component is not valid
 	 */
 	private String normalizeComponent(String comp, boolean scanForParameters) {
 		// Extract parameters
@@ -205,6 +208,11 @@ public class AssetPath implements Cloneable {
 			comp=URLDecoder.decode(comp, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException(e);
+		}
+		
+		// After decoding, it cannot contain illegal values
+		if (!isValidComponent(comp)) {
+			throw new IllegalArgumentException("Illegal path component " + comp);
 		}
 		
 		return comp;

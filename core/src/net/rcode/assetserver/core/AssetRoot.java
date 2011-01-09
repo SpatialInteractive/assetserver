@@ -213,7 +213,7 @@ public class AssetRoot {
 			// expected
 			// Note that the "/" mount point is null which makes this trickier
 			// (why oh why did I do that to myself)
-			if (requestPath==null || mountPoint==null || mountPoint.startsWith(requestPath)) {
+			if (requestPath==null || mountPoint==null || requestPath.startsWith(mountPoint)) {
 				// The mount may contain the prefix
 				String localPath;
 				// Determine the part of requestPath that is local to the mount
@@ -235,6 +235,7 @@ public class AssetRoot {
 			ScanCallback callback) throws Exception {
 		// Stat the path and decide what to do
 		ResourceStat stat=assetPath.getMount().stat(assetPath);
+		if (stat==null) return;
 		if (stat.isDirectory) {
 			// Traverse the directory
 			scanDirectory(assetPath, config, callback);

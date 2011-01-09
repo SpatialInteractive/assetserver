@@ -5,10 +5,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Some IO utilities that Java should really have in the SDK.  All methods that read
@@ -18,6 +21,36 @@ import java.io.Reader;
  *
  */
 public class IOUtil {
+	private static Set<File> deleteOnExitSet=new HashSet<File>();
+	private static boolean deleteHookRegistered=false;
+	
+	private static class DeleteFileHook extends Thread {
+		@Override
+		public void run() {
+			synchronized (deleteOnExitSet) {
+				for (File file: deleteOnExitSet) {
+					file.delete();
+				}
+			}
+		}
+	}
+	
+	public static void deleteOnExit(File file) {
+		synchronized (deleteOnExitSet) {
+			if (!deleteHookRegistered) {
+				deleteHookRegistered=true;
+				Runtime.getRuntime().addShutdownHook(new DeleteFileHook());
+			}
+			deleteOnExitSet.add(file);
+		}
+	}
+	
+	public static void cancelDeleteOnExit(File file) {
+		synchronized (deleteOnExitSet) {
+			deleteOnExitSet.remove(file);
+		}
+	}
+	
 	public static byte[] slurpBinary(InputStream input, int sizeHint) throws IOException {
 		try {
 			ByteArrayOutputStream out;
@@ -125,5 +158,49 @@ public class IOUtil {
 		if (inputStream==null) return null;
 		if (inputStream instanceof BufferedInputStream || inputStream instanceof ByteArrayInputStream) return inputStream;
 		return new BufferedInputStream(inputStream);
+	}
+
+	/**
+	 * Writes a file in such a way that no two processes can access it at the same time
+	 * @param destionation
+	 * @param source
+	 * @throws IOException 
+	 */
+	public static void interlockedWriteFile(File destination, BufferAccessor source) throws IOException {
+		File parentDir=destination.getParentFile();
+		File tmpFile=File.createTempFile("new", "ren", parentDir);
+		boolean success=false;
+		deleteOnExit(tmpFile);
+		try {
+			// Copy the streams
+			InputStream in=null;
+			FileOutputStream out=new FileOutputStream(tmpFile);
+			try {
+				in=source.openInput();
+				byte[] buffer=new byte[16384];
+				for (;;) {
+					int r=in.read(buffer);
+					if (r<0) break;
+					out.write(buffer, 0, r);
+				}
+			} finally {
+				try { out.close(); } catch (IOException e) { }
+				if (in!=null) {
+					try {
+						in.close();
+					} catch (IOException e) { }
+				}
+			}
+			
+			// Delete and rename the file
+			destination.delete();
+			if (!tmpFile.renameTo(destination)) {
+				throw new IOException("Unable to interlocked create " + destination + ".  Possible permission problem or race condition with another process.");
+			}
+			success=true;
+		} finally {
+			if (!success) tmpFile.delete();
+			cancelDeleteOnExit(tmpFile);
+		}
 	}
 }
