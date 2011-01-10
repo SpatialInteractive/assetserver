@@ -7,12 +7,15 @@ import java.io.Reader;
 import net.rcode.assetserver.core.AssetLocator;
 import net.rcode.assetserver.core.BufferAssetLocator;
 import net.rcode.assetserver.core.FilterChain;
+import net.rcode.assetserver.core.RequestContext;
 import net.rcode.assetserver.core.ResourceFilter;
 import net.rcode.assetserver.util.BlockOutputStream;
 import net.rcode.assetserver.util.IOUtil;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 /**
  * Implement the JavaScript Embedded preprocessor against text-based resources.
@@ -51,10 +54,20 @@ public class EjsResourceFilter extends ResourceFilter {
 		
 		Context cx=runtime.enter();
 		try {
-			Function template=compiler.compileTemplate(instance.getScope(), templateIn, context.getRootFile().toString());
+			// Establish globals
+			Scriptable scope=instance.getScope();
+			
+			Scriptable runtime=cx.newObject(scope);
+			ScriptableObject.putProperty(scope, "runtime", runtime);
+			
+			ScriptableObject.putProperty(runtime, "filterChain", context);
+			ScriptableObject.putProperty(runtime, "server", context.getServer());
+			ScriptableObject.putProperty(runtime, "requestContext", RequestContext.getInstance());
+			
+			Function template=compiler.compileTemplate(scope, templateIn, context.getRootFile().toString());
 			Function appendableWrite=instance.createAppendableAdapter(out);
 			
-			template.call(cx, instance.getScope(), null, new Object[] { appendableWrite });
+			template.call(cx, scope, null, new Object[] { appendableWrite });
 			out.flush();
 		} finally {
 			runtime.exit();

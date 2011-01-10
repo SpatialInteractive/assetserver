@@ -10,8 +10,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * Some IO utilities that Java should really have in the SDK.  All methods that read
@@ -67,6 +70,43 @@ public class IOUtil {
 			return out.toByteArray();
 		} finally {
 			input.close();
+		}
+	}
+	
+	/**
+	 * Decodes the given buffer to a String using the given encoding.  The special
+	 * psuedo encoding of "base64" is also recognized.
+	 * This method is called from JavaScript
+	 * @param buffer
+	 * @param encoding
+	 * @return a String
+	 */
+	public static String decodeBufferToString(BufferAccessor buffer, String encoding) throws IOException {
+		if ("base64".equalsIgnoreCase(encoding)) {
+			// Use commons Base64 encoder
+			Base64 b64=new Base64(-1);
+			return b64.encodeToString(buffer.getBytes());
+		} else {
+			// Normal character set
+			long length=buffer.length();
+			int initialSize=16384;
+			if (length>0 && length<Integer.MAX_VALUE) initialSize=(int) length;
+			
+			StringBuilder builder=new StringBuilder(initialSize);
+			Charset cs=Charset.forName(encoding);
+			InputStreamReader in=new InputStreamReader(buffer.openInput(), cs);
+			try {
+				char[] b=new char[4096];
+				for (;;) {
+					int r=in.read(b);
+					if (r<0) break;
+					builder.append(b, 0, r);
+				}
+				
+				return builder.toString();
+			} finally {
+				in.close();
+			}
 		}
 	}
 	

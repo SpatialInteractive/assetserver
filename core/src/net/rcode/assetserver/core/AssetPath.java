@@ -84,6 +84,9 @@ public class AssetPath implements Cloneable {
 	 */
 	private Map<String, String> parameters;
 	
+	// Cache on first access
+	private String cacheFullPath;
+	
 	public AssetPath(AssetMount mount, String mountPoint, String path) throws IllegalArgumentException {
 		this.mount=mount;
 		this.mountPoint=mountPoint;
@@ -122,11 +125,14 @@ public class AssetPath implements Cloneable {
 	 * @return the canonical, reconstructed path including the mount point and path
 	 */
 	public String getFullPath() {
-		// Reassemble the path
-		StringBuilder pathBuilder=new StringBuilder((path!=null ? path.length():0) + (mountPoint==null ? 0 : mountPoint.length()) + 50);
-		joinPath(pathBuilder, mountPointComponents);
-		joinPath(pathBuilder, pathComponents);
-		return pathBuilder.toString();
+		if (cacheFullPath==null) {
+			// Reassemble the path
+			StringBuilder pathBuilder=new StringBuilder((path!=null ? path.length():0) + (mountPoint==null ? 0 : mountPoint.length()) + 50);
+			joinPath(pathBuilder, mountPointComponents);
+			joinPath(pathBuilder, pathComponents);
+			cacheFullPath=pathBuilder.toString();
+		}
+		return cacheFullPath;
 	}
 	
 	/**

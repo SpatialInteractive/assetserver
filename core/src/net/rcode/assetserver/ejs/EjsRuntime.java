@@ -90,6 +90,7 @@ public class EjsRuntime {
 	}
 	
 	EjsRuntime(boolean seal) {
+		useDynamicScope=true;
 		Context cx=enter();
 		try {
 			sharedScope=cx.initStandardObjects(null, seal);
@@ -123,11 +124,11 @@ public class EjsRuntime {
 	public void loadLibrary(Reader source, String name) {
 		try {
 			Context cx=enter();
-			useDynamicScope=true;
+			//useDynamicScope=true;
 			try {
 				cx.evaluateReader(sharedScope, source, name, 1, null);
 			} finally {
-				useDynamicScope=false;
+				//useDynamicScope=false;
 				exit();
 				source.close();
 			}

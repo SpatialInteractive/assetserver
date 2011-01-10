@@ -67,33 +67,18 @@ public class CopyCommand extends MainCommand {
 		
 		// Boot up the server
 		File configLocation=new File(serverRoot);
-		AssetServer server=new AssetServer(configLocation);
+		final AssetServer server=new AssetServer(configLocation);
 		
 		// Set up for scan
 		ScanConfig config=new ScanConfig();
-		CopyProcessor processor=new CopyProcessor(toLocation);
+		final CopyProcessor processor=new CopyProcessor(server, toLocation);
 		processor.verbosity=10;
 		processor.verboseWriter=new PrintWriter(System.err, true);
 		
 		// Case 1. Two arguments and the from is a file and the to either does not exist or is a file
 		// Support single resource copy.  This doesn't actually do a scan
 		if (fromPaths.size()==1 && (!toLocation.exists() || toLocation.isFile())) {
-			String singleFrom=fromPaths.get(0);
-			// Look up the single named resource
-			processor.reportOpening(singleFrom);
-			
-			AssetLocator locator=server.getRoot().resolve(fromPaths.get(0));
-			if (locator==null) {
-				fail("From location '" + singleFrom + "' does not exist.");
-				return;
-			}
-			
-			// Delete and copy
-			processor.reportSaving(toLocation);
-			IOUtil.interlockedWriteFile(toLocation, locator);
-			
-			processor.reportDoneSaving();
-			processor.reportRuntime();
+			processor.copySingle(fromPaths.get(0));
 			return;
 		}
 		
@@ -166,9 +151,11 @@ public class CopyCommand extends MainCommand {
 		public int verbosity;
 		public PrintWriter verboseWriter;
 		public String outputPrefix;
+		private AssetServer server;
 		
-		public CopyProcessor(File destination) {
+		public CopyProcessor(AssetServer server, File destination) {
 			this.destination=destination;
+			this.server=server;
 		}
 
 		/**
@@ -214,50 +201,83 @@ public class CopyCommand extends MainCommand {
 			}
 		}
 		
+		public void copySingle(String singleFrom) throws Exception {
+			server.enterRequestContext();
+			try {
+				// Look up the single named resource
+				reportOpening(singleFrom);
+				
+				AssetLocator locator=server.getRoot().resolve(singleFrom);
+				if (locator==null) {
+					fail("From location '" + singleFrom + "' does not exist.");
+					return;
+				}
+				
+				// Delete and copy
+				reportSaving(destination);
+				IOUtil.interlockedWriteFile(destination, locator);
+				
+				reportDoneSaving();
+				reportRuntime();
+			} finally {
+				server.exitRequestContext();
+			}
+		}
+		
 		@Override
 		public boolean handleAsset(AssetPath path) throws Exception {
-			String fullAssetPath=path.getFullParameterizedPath();
-			File localPath=resolveLocal(fullAssetPath);
-			
-			if (localPath==null) {
-				throw new IllegalStateException("INTERNAL ERROR: Scanner returned a path (" + fullAssetPath + ") not contained under the output prefix (" +
-						outputPrefix + ")");
+			server.enterRequestContext();
+			try {
+				String fullAssetPath=path.getFullParameterizedPath();
+				File localPath=resolveLocal(fullAssetPath);
+				
+				if (localPath==null) {
+					throw new IllegalStateException("INTERNAL ERROR: Scanner returned a path (" + fullAssetPath + ") not contained under the output prefix (" +
+							outputPrefix + ")");
+				}
+				
+				reportOpening(fullAssetPath);
+				AssetLocator locator=path.getMount().resolve(path);
+				reportSaving(localPath);
+				
+				localPath.getParentFile().mkdirs();
+				IOUtil.interlockedWriteFile(localPath, locator);
+				reportDoneSaving();
+				
+				return true;
+			} finally {
+				server.exitRequestContext();
 			}
-			
-			reportOpening(fullAssetPath);
-			AssetLocator locator=path.getMount().resolve(path);
-			reportSaving(localPath);
-			
-			localPath.getParentFile().mkdirs();
-			IOUtil.interlockedWriteFile(localPath, locator);
-			reportDoneSaving();
-			
-			return true;
 		}
 
 		@Override
 		public boolean handleDirectory(AssetPath path) throws Exception {
-			String fullAssetPath=path.getFullParameterizedPath();
-			if (fullAssetPath.isEmpty()) {
-				// Do nothing if the root directory (happens on root mounts)
-				return true;
-			}
-			
-			File localPath=resolveLocal(fullAssetPath);
-			if (localPath==null) {
-				// This sometimes happens for directories because the parent directory will
-				// be reported but is not under prefix.  Just ignore.
-				return true;
-			}
-			
-			reportDirectory(fullAssetPath, localPath);
-			if (!localPath.mkdirs()) {
-				if (!localPath.isDirectory()) {
-					fail("Could not create directory " + localPath);
+			server.enterRequestContext();
+			try {
+				String fullAssetPath=path.getFullParameterizedPath();
+				if (fullAssetPath.isEmpty()) {
+					// Do nothing if the root directory (happens on root mounts)
+					return true;
 				}
+				
+				File localPath=resolveLocal(fullAssetPath);
+				if (localPath==null) {
+					// This sometimes happens for directories because the parent directory will
+					// be reported but is not under prefix.  Just ignore.
+					return true;
+				}
+				
+				reportDirectory(fullAssetPath, localPath);
+				if (!localPath.mkdirs()) {
+					if (!localPath.isDirectory()) {
+						fail("Could not create directory " + localPath);
+					}
+				}
+				
+				return true;
+			} finally {
+				server.exitRequestContext();
 			}
-			
-			return true;
 		}
 
 		private File resolveLocal(String fullAssetPath) {

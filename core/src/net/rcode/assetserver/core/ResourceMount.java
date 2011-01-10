@@ -141,6 +141,15 @@ public class ResourceMount extends AssetMount {
 	
 	@Override
 	public AssetLocator resolve(AssetPath assetPath) throws Exception {
+		RequestContext requestContext=server.enterRequestContext();
+		try {
+			return resolveInContext(assetPath, requestContext);
+		} finally {
+			server.exitRequestContext();
+		}
+	}
+	
+	public AssetLocator resolveInContext(AssetPath assetPath, RequestContext requestContext) throws Exception {
 		File resolvedFile=resolveToFile(assetPath);
 		if (resolvedFile==null || !resolvedFile.isFile()) return null;
 		
@@ -170,30 +179,35 @@ public class ResourceMount extends AssetMount {
 		}
 		
 		FilterChain chain=new FilterChain(server, assetPath, rootLocator, resolvedFile);
-		chain.getDependencies().add(new FileCacheDependency(resolvedFile));
-		initializeFilterChain(server.getContextManager().getRootContext(), chain, resolvedFile);
-		chain.processFilters();
-		
-		// Get the resolved locator and handle caching
-		AssetLocator resolvedLocator=chain.getCurrent();
-		if (resolvedLocator==null || resolvedLocator.shouldCache()) {
-			// Cache negative results or things explicitly cacheable
-			CacheDependency[] dependencies=chain.getDependencies().toArray(new CacheDependency[chain.getDependencies().size()]);
-			if (resolvedLocator==null) {
-				// Store a negative cache entry
-				cacheEntry=new CacheEntry(identity, dependencies, null, null, null);
-				cache.store(cacheEntry);
-				return null;
+		requestContext.pushActiveFilterChain(chain);
+		try {
+			requestContext.addDependency(new FileCacheDependency(resolvedFile));
+			initializeFilterChain(server.getContextManager().getRootContext(), chain, resolvedFile);
+			chain.processFilters();
+			
+			// Get the resolved locator and handle caching
+			AssetLocator resolvedLocator=chain.getCurrent();
+			if (resolvedLocator==null || resolvedLocator.shouldCache()) {
+				// Cache negative results or things explicitly cacheable
+				CacheDependency[] dependencies=chain.getDependencies().toArray(new CacheDependency[chain.getDependencies().size()]);
+				if (resolvedLocator==null) {
+					// Store a negative cache entry
+					cacheEntry=new CacheEntry(identity, dependencies, null, null, null);
+					cache.store(cacheEntry);
+					return null;
+				} else {
+					// Store a positive cache entry and return it
+					cacheEntry=new CacheEntry(identity, dependencies, resolvedLocator.getContentType(),
+							resolvedLocator.getCharacterEncoding(), slurpLocatorContents(resolvedLocator));
+					cache.store(cacheEntry);
+					return cacheEntry;
+				}
 			} else {
-				// Store a positive cache entry and return it
-				cacheEntry=new CacheEntry(identity, dependencies, resolvedLocator.getContentType(),
-						resolvedLocator.getCharacterEncoding(), slurpLocatorContents(resolvedLocator));
-				cache.store(cacheEntry);
-				return cacheEntry;
+				// Not cacheable - just return
+				return resolvedLocator;
 			}
-		} else {
-			// Not cacheable - just return
-			return resolvedLocator;
+		} finally {
+			requestContext.popActiveFilterChain();
 		}
 	}
 

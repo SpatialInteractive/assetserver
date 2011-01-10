@@ -5,11 +5,11 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.logging.Level;
 
+import net.rcode.assetserver.core.AssetServer;
+
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import net.rcode.assetserver.core.AssetServer;
 
 /**
  * Adapts an AssetServer instance by adding http interfaces.

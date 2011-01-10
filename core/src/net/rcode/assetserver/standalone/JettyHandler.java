@@ -1,7 +1,6 @@
 package net.rcode.assetserver.standalone;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -51,6 +50,25 @@ public class JettyHandler extends AbstractHandler {
 	
 	@Override
 	public void handle(String target, Request baseRequest, HttpServletRequest request,
+			HttpServletResponse response) throws IOException, ServletException {
+		server.enterRequestContext();
+		try {
+			handleInContext(target, baseRequest, request, response);
+		} finally {
+			server.exitRequestContext();
+		}
+	}
+	
+	/**
+	 * Handle the request within a server enterRequestContext() / exitRequestContext() block
+	 * @param target
+	 * @param baseRequest
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 * @throws ServletException
+	 */
+	protected void handleInContext(String target, Request baseRequest, HttpServletRequest request,
 			HttpServletResponse response) throws IOException, ServletException {
 		AssetRoot root=server.getRoot();
 		if (root==null) {

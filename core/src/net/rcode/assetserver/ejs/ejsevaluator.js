@@ -8,7 +8,8 @@ function(fragments) {
 			if (t==='function') {
 				value=fragment.call(null);
 				//logger.info("fragment interpolation: " + value);
-				writer(value);
+				if (value!==null && value!==undefined)
+					writer(value);
 			} else if (fragment!==null && fragment!==undefined) {
 				//logger.info("fragment " + i + "=" + fragment);
 				writer(fragment);

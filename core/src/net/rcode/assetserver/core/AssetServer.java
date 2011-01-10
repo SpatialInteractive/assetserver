@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import net.rcode.assetserver.cache.Cache;
 import net.rcode.assetserver.ejs.EjsRuntime;
@@ -226,4 +227,39 @@ public class AssetServer {
 		
 		return out;
 	}
+	
+	/**
+	 * Set up a context to process a request and invoke the callback within this context.  This sets
+	 * up thread locals needed to initiate actions agains the root.
+	 * @param <T>
+	 * @param callback
+	 * @return the return value from the callback
+	 */
+	public <T> T withRequestContext(Callable<T> callback) throws Exception {
+		enterRequestContext();
+		try {
+			return callback.call();
+		} finally {
+			exitRequestContext();
+		}
+	}
+
+	/**
+	 * Enters a RequestContext.  Must be balanced by a call to exitRequestContext().
+	 * Should use withRequestContext instead
+	 * @return 
+	 */
+	public RequestContext enterRequestContext() {
+		return RequestContext.enter();
+	}
+	
+	/**
+	 * Leave the RequestContext
+	 */
+	public void exitRequestContext() {
+		RequestContext.exit();
+	}
+	
+	// --- The following methods exist to ease access from JavaScript
+	
 }
