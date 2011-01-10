@@ -40,7 +40,7 @@ global.read=function(resourceName, options) {
 	// Normalize the path
 	var relativeTo=runtime.filterChain.assetPath.fullPath,
 		normalizedPath=PathUtil.normalizePath(relativeTo, resourceName);
-	
+	logger.info('Normalized path: ' + normalizedPath);
 	// Get the locator
 	var locator=runtime.server.root.resolve(normalizedPath);
 	if (!locator) return null;
