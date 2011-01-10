@@ -67,6 +67,8 @@ public class EjsResourceFilter extends ResourceFilter {
 			Function template=compiler.compileTemplate(scope, templateIn, context.getRootFile().toString());
 			Function appendableWrite=instance.createAppendableAdapter(out);
 			
+			ScriptableObject.putProperty(runtime, "rawWrite", appendableWrite);
+			
 			template.call(cx, scope, null, new Object[] { appendableWrite });
 			out.flush();
 		} finally {

@@ -50,4 +50,26 @@ global.read=function(resourceName, options) {
 	return String(IOUtil.decodeBufferToString(locator, encoding));
 };
 
+/**
+ * Write to the current resource.  If text===null or text===undefined, then
+ * nothing is written.  Otherwise, the value of String(text) is written.
+ */
+global.write=function(text) {
+	if (text===null || text===undefined) return;
+	runtime.rawWrite(text);	// The appendable writer invokes a String(...) function
+};
+
+/**
+ * Similar to read but outputs the contents of the resource directly into the
+ * current resource.  Unlike read, if the resource is not found, it is an error.
+ */
+global.include=function(resourceName, options) {
+	var contents=global.read(resourceName, options);
+	if (contents===null) {
+		throw new Error('In call to include(...), ' + resourceName + ' could not be found.');
+	}
+	
+	runtime.rawWrite(contents);
+};
+
 })(global);
