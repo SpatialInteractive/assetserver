@@ -122,4 +122,17 @@ public class PathUtil {
 	public static String joinPath(String... components) {
 		return joinPath(Arrays.asList(components));
 	}
+	
+	/**
+	 * Return the dirname of the path.  This basically just extracts the substring
+	 * from the beginning to the last slash (including the last slash) or '/'
+	 * if no slash.
+	 * @param path
+	 * @return dirname
+	 */
+	public static String dirname(String path) {
+		int slashPos=path.lastIndexOf('/');
+		if (slashPos<0) return "/";
+		return path.substring(0, slashPos+1);
+	}
 }

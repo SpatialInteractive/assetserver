@@ -2,7 +2,7 @@
 /*!
  Compiled at #{new Date()}
 */
-#header {
+#header, body {
 	background-color: blue;
 }
 
