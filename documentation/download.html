@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Asset Server - Main</title>
+</head>
+<body>
+	<div id="header">
+		<h1>Asset Server
+			<span class="byline">Modern web development without the 90s web server</span>
+		</h1>
+	</div>
+	
+	<div id="nav">
+		<ul>
+			<li><a href="index.html">Overview</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="quickstart.html">Quick Start</a></li>
+			<li><a href="usersguide.html">User's Guide</a></li>
+			<li><a href="developing.html">Development Guide</a></li>
+			<li><a href="cookbook.html">Cookbook</a></li>
+		</ul>
+	</div>
+	
+	<div id="main">
+		<div class="section">
+			<h2>Download</h2>
+			<p>
+			Go to <a href="http://www.rcode.net/assetserver/download">http://www.rcode.net/assetserver/download</a> for all download packages.
+			</p>
+			<p>
+			Binary and source packages are available for download.  In addition, the source code is available on <a href="http://github.com/stellaeof/assetserver">GitHub</a>.  In order to build, you must have Ant 1.7+ and Java 1.6+.  Go into the source directory and run "ant dist".  The distribution will be built under build/dist and archives will be saved in build/download.  Resulting binaries should be runnable on any machine that has Java 1.5+ installed.
+			</p>
+			<p>
+			Because Asset Server is a tool and not a library, some effort was taken to make sure that it doesn't suffer from the Java hangover that afflicts so much software on that platform.  Most people who aren't familiar with Java (or even especially sometimes, those who are) avoid Java web stuff like the plague.  Asset Server is different.  As long as you have a Java 5+ JVM installed on your system, you will have no knowledge that you are using a Java-based tool.
+			</p>
+			<p>
+			Two binary distributions are available: one for Windows and one for everything else (where "everything else" is assumed to be a Posix system with a Bourne shell).  Within the Windows distribution you will find a bin/assetserver.exe file and in the generic distribution, a bin/assetserver file.  This is the entire program.  Just put the file on your path somewhere and run it from a console.  It should just work as long as a Java 5+ JVM is available on the system.  On Windows - this means that either a 32bit or 64bit JVM was installed and has the Sun registry keys describing the installation (this can be overriden by the JAVA_HOME environment variable).  On Posix systems, either the JAVA_HOME environment variable must point to a valid JVM installation or the "java" command on the system path will be used.  
+			</p>
+			<p>
+			See <a href="quickstart.html">Quick Start</a> for more information.
+			</p>
+		</div>
+		
+	</div>
+	
+	<div id="footer">
+		Copyright &copy;2011 Stella Laurenzo
+	</div>
+	
+</body>
+</html>
+
