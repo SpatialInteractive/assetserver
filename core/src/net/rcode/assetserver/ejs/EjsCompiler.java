@@ -108,8 +108,8 @@ public class EjsCompiler {
 				public void handleInterpolation(CharSequence script, LocationInfo location) {
 					// Compile the generator function
 					StringBuilder interpDefn=new StringBuilder(script.length()+50);
-					interpDefn.append("function(){return String(")
-						.append(script).append(");}");
+					interpDefn.append("function(){var expr=")
+						.append(script).append(";return (expr===null||expr===undefined) ? null : String(expr);}");
 					Function interpFunction=cx.compileFunction(scope, interpDefn.toString(), 
 							sourceName, location.getLineStart(), null);
 					int index=fragmentIndex++;

@@ -7,7 +7,7 @@ function(fragments) {
 			t=typeof fragment;
 			if (t==='function') {
 				value=fragment.call(null);
-				//logger.info("fragment interpolation: " + value);
+				//logger.info("fragment interpolation: " + typeof(value) + ' ' + value);
 				if (value!==null && value!==undefined)
 					writer(value);
 			} else if (fragment!==null && fragment!==undefined) {
