@@ -72,4 +72,37 @@ global.include=function(resourceName, options) {
 	runtime.rawWrite(contents);
 };
 
+/**
+ * Return the full absolute path of the resource requested by the client
+ */
+global.requestedPath=function() {
+	return runtime.requestContext.activeFilterChains.get(0).assetPath.fullPath;
+};
+
+/**
+ * Return the full absolute path to the current resource
+ */
+global.thisPath=function() {
+	return runtime.filterChain.assetPath.fullPath;
+};
+
+/**
+ * Convert a path interpreted relative to this resource to a path
+ * interpreted relative to the root resource of the request (ie.
+ * the path that the client thinks it's requesting).
+ * <p>
+ * This is a useful mechanism for HTML and CSS files which can contain
+ * paths relative to the containing resource.
+ * 
+ * TODO: There are cache implications to doing this that need to
+ * be fixed.  The cache identity needs to include a redux of the include
+ * path
+ */
+global.clientRelative=function(path) {
+	var fromPath=PathUtil.dirname(global.thisPath()),
+		toPath=PathUtil.dirname(global.requestedPath());
+	
+	return PathUtil.translateRelative(fromPath, toPath, path);
+};
+
 })(global);

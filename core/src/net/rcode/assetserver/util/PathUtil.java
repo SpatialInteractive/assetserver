@@ -46,15 +46,13 @@ public class PathUtil {
 	}
 
 	/**
-	 * If path is not absolute (does not start with a leading /), then compute
-	 * it relative to rootPath.  In all cases, "." and ".." path segments are
-	 * expanded in path (but not rootPath).
-	 * 
+	 * Equivilent to normalizePath(...) but returns the resultant path as components
+	 * instead of joining them.
 	 * @param relativeTo
 	 * @param path
-	 * @return normalized path or null if the path is not valid
+	 * @return list of path components
 	 */
-	public static String normalizePath(String relativeTo, String path) {
+	public static List<String> normalizePathComponents(String relativeTo, String path) {
 		String[] components=splitPath(path);
 		ArrayList<String> normalizedComponents=new ArrayList<String>(components.length+10);
 		if (!path.startsWith("/")) {
@@ -90,8 +88,23 @@ public class PathUtil {
 			normalizedComponents.add(component);
 		}
 		
+		return normalizedComponents;
+	}
+	
+	/**
+	 * If path is not absolute (does not start with a leading /), then compute
+	 * it relative to rootPath.  In all cases, "." and ".." path segments are
+	 * expanded in path (but not rootPath).
+	 * 
+	 * @param relativeTo
+	 * @param path
+	 * @return normalized path or null if the path is not valid
+	 */
+	public static String normalizePath(String relativeTo, String path) {
 		// Join it back together and return
-		return joinPath(normalizedComponents);
+		List<String> components=normalizePathComponents(relativeTo, path);
+		if (components==null) return null;
+		return joinPath(components);
 	}
 	
 	/**
@@ -124,6 +137,30 @@ public class PathUtil {
 	}
 	
 	/**
+	 * Construct a relative path from the given components
+	 * @param components
+	 * @return relative path
+	 */
+	public static String joinRelativePath(List<String> components) {
+		StringBuilder builder=new StringBuilder();
+		for (String component: components) {
+			if (builder.length()>0) builder.append('/');
+			builder.append(component);
+		}
+		
+		return builder.toString();
+	}
+	
+	/**
+	 * Vararg version of joinRelativePath
+	 * @param components
+	 * @return relative path
+	 */
+	public static String joinRelativePath(String... components) {
+		return joinRelativePath(Arrays.asList(components));
+	}
+	
+	/**
 	 * Return the dirname of the path.  This basically just extracts the substring
 	 * from the beginning to the last slash (including the last slash) or '/'
 	 * if no slash.
@@ -134,5 +171,46 @@ public class PathUtil {
 		int slashPos=path.lastIndexOf('/');
 		if (slashPos<0) return "/";
 		return path.substring(0, slashPos+1);
+	}
+	
+	/**
+	 * Given path, relative to fromPath, translate it to a path relative to
+	 * toPath using ".." components as needed.
+	 *  
+	 * @param fromPath
+	 * @param toPath
+	 * @param path
+	 * @return translated relative path, or null if cannot be translated
+	 */
+	public static String translateRelative(String fromPath, String toPath, String path) {
+		// First, normalize fromPath/path
+		List<String> fromComponents=normalizePathComponents(fromPath, path);
+		if (fromComponents==null) return null;
+		
+		// Explode the toPath
+		String[] toComponents=splitPath(toPath);
+		List<String> targetComponents=new ArrayList<String>(fromComponents.size()+10);
+		
+		// Identify the common prefix, if any
+		int minLength=Math.min(fromComponents.size(), toComponents.length);
+		int suffixIndex=0;
+		for (int i=0; i<minLength; i++) {
+			if (!toComponents[i].equals(fromComponents.get(i))) break;
+			suffixIndex++;
+		}
+		
+		// suffixIndex now points to the first non-equal component in both lists
+		// any remaining components in toComponents must be expanded as ".."
+		for (int i=suffixIndex; i<toComponents.length; i++) {
+			targetComponents.add("..");
+		}
+		
+		// and then all remaining components of fromComponents must be added
+		for (int i=suffixIndex; i<fromComponents.size(); i++) {
+			targetComponents.add(fromComponents.get(i));
+		}
+		
+		// then join the path together as a relative path
+		return joinRelativePath(targetComponents);
 	}
 }

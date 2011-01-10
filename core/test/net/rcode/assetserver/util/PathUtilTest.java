@@ -53,4 +53,11 @@ public class PathUtilTest {
 	public void testNormalizeDoubleSlash() {
 		assertEquals("/abc/def/123", PathUtil.normalizePath("/", "/abc//def//123///"));
 	}
+	
+	@Test
+	public void testTranslateRelative() {
+		assertEquals("menustyles/images/bluedot.png", PathUtil.translateRelative("/content/css/menustyles", "/content/css", "images/bluedot.png"));
+		assertEquals("../../content/css/menustyles/images/bluedot.png", PathUtil.translateRelative("/content/css/menustyles/", "/jquery/css", "images/bluedot.png"));
+	}
+
 }

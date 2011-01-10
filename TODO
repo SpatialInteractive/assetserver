@@ -1,0 +1,11 @@
+Running todo list.
+
+Targeting v1:
+	- Translate exceptions to provide details and source in server response
+	- Update caching to include full evaluation state
+	- Add directory specific resource contexts
+	- Change behavior of ignore filter to only ignore top requests
+	- Add parameters to control optimization settings per request
+	- Add HTML control panel
+
+	
