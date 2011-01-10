@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Asset Server - Main</title>
+</head>
+<body>
+	<div id="header">
+		<h1>Asset Server
+			<span class="byline">Modern web development without the 90s web server</span>
+		</h1>
+	</div>
+	
+	<div id="nav">
+		<ul>
+			<li><a href="index.html">Overview</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="quickstart.html">Quick Start</a></li>
+			<li><a href="usersguide.html">User's Guide</a></li>
+			<li><a href="developing.html">Development Guide</a></li>
+			<li><a href="cookbook.html">Cookbook</a></li>
+		</ul>
+	</div>
+	
+	<div id="main">
+		<div class="section">
+			<h2>History</h2>
+			<p>
+			Asset Server is one of those pieces of software that advocates a different way of doing things.  In my experience, it is very hard to get such a thing right in a first version, so for the sake of allaying concern, I will share some of the history of where it came from.  It is in fact, conceptually, a V2 and represents several years of personal experience in doing development in the large of HTML, JavaScript and CSS.
+			</p>
+			<p>
+			In the recent past, I ran engineering for MapQuest.com and had a long history of being the primary JavaScript architect for the site.  Most people don't realize how complicated a tier-1 mapping site is, but I can safely say that it was the most advanced HTML/JavaScript solution I've worked on.  During my tenure there, we rewrote the thing in various incarnations three times, and I'm pretty confident that what emerged in 2010 represented a maxima when it came to JavaScript architecture and development practices.  Nothing is ever perfect, but we took our knocks and learned from them like everyone does.  One of the things that added the "in the large" part to MapQuest.com in particular was the proprietary JavaScript mapping toolkit.  When I arrived, MapQuest.com actually didn't use the JavaScript API that it licensed to its customers, and the process of correcting that issue led us down quite a few dark corners when it came to JavaScript configuration management.  Managing the evolution of a library is entirely different from managing an application, and then insuring that you eat your own dogfood and push development of the library forward based on the needs of the application is a real challenge to get right.  In an ideal world, you would have dedicated teams for each, but all we had were multiple hats.
+			</p>
+			<p>
+			In mid-2008, a couple of us got together to work on an iPhone optimized MapQuest experience, and it became painfully apparent that the mapping library was an order of magnitude too large to be effective.  While we could slim it down, the stock download was running something like 300KB if memory serves.  So, I rewrote it, eliminating reams of code and applying every space saving technique I knew, including multiple build profiles and dynamic loading of seldom used components (when done, I think we were running about a 20-25KB download for the API).  The build script I hacked together to assemble it was pretty fragile and was getting on my nerves because it was so hard to develop against.  You had to rebuild to get a realistic environment, which was causing no small amount of pain.
+			</p>
+			<p>
+			For about three months, between September and December I used my Starbucks time to come up with a better arrangement to the build situation and the result was something we called "cdntools" and was the first expression of many of the ideas that I've elaborated on with Asset Server.
+			</p>
+			<p>
+			As an aside, during my tenure at MapQuest, I tended to exercise what I called my Starbucks time.  Basically, I would take one hour in the morning at Starbucks 3-4 times a week.  I would never do scheduled work during this time but would spend it either cleaning up, refactoring, setting things right or doing exploratory investigations.  Once the time was up, I would go into the office and spend a full work day seeing to the regular demands of the job.  People would often ask me how I found the time to take care of some of the things like cdntools.  The answer was that 3-4 hours of focused time per week does produce results, and it clears your mind to focus on the regular parts of the job during the rest of the time.  At the time when I wrote cdntools, I was managing over 100 people, and it is apparently bizarre to be in this position and find time to be a produtive architect.  It's just a matter of knowing what you can't afford to not do, and for me, staying technically sharp and making better tools to refine the development process were non-negotiables.
+			</p>
+			<p>
+			We ended up integrating the "mobile map api" into the main site in early 2009 and brought the new concepts of managing the JavaScript and CSS that it included into the mainline application.  A refactor later that year completely removed everything that was dependent on the old Dojo based build system and added widgets, internationalization, and multiple sites sharing the same client side code.  We used to have an "ant run-optimized" target that would go and spend several minutes assembling everything for production and then let you run it locally.  One of the worst tasks for years was always trying to figure out why the code that worked perfectly fine in development failed mysteriously in an "optimized" build.  Cdntools built everything on the fly and managed the browser cache in such a way that you could always be assured that when you hit save in your editor, your browser would have the new version immediately.  The terror of the optimized builds was gone forever.
+			</p>
+			<p>
+			When I left MapQuest and started working independently again, I felt this major hole where cdntools had been.  We had talked about open sourcing it, but it was pretty tied into the fabric of how things were done there and we just never got around to it.  Anyway, everyone knows that a V2 is always better than a V1.  Whereas I didn't know exactly where I was heading in the first go round, I know exactly what I'm trying to achieve this time and have built it from the ground up to meet those goals.
+			</p>
+			<p>
+			For the record, I had no access to any MapQuest proprietary bits when I wrote Asset Server and anyone who has a view of both can confirm that aside from the fact that both were written in Java and use Rhino to preprocess resources, the architecture is entirely different.
+			</p>
+		</div>
+	</div>
+	
+	<div id="footer">
+		Copyright &copy;2011 Stella Laurenzo
+	</div>
+	
+</body>
+</html>
+

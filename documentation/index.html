@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Asset Server - Main</title>
+</head>
+<body>
+	<div id="header">
+		<h1>Asset Server
+			<span class="byline">Modern web development without the 90s web server</span>
+		</h1>
+	</div>
+	
+	<div id="nav">
+		<ul>
+			<li><a href="index.html">Overview</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="quickstart.html">Quick Start</a></li>
+			<li><a href="usersguide.html">User's Guide</a></li>
+			<li><a href="developing.html">Development Guide</a></li>
+			<li><a href="cookbook.html">Cookbook</a></li>
+		</ul>
+	</div>
+	
+	<div id="main">
+		<div class="section">
+			<h2>What is Asset Server</h2>
+			<p>
+			First and foremost, Asset Server is a development platform for managing all of the random files associated with modern web development (ie. "Assets").  There is certainly the potential for a much more clever name, but alas, I am not that creative.  Put another way, it is an attempt to enable modern web development "in the large" in a platform and framework independent fashion.  Modern HTML/JavaScript is an incredibly adept platform for quickly realizing interesting web applications, but as the application grows in scope and complexity, the developer often finds herself wishing for just a little help from the server side when it comes to assembling and managing the explosion of mostly static files that comprise the application.  Many times there is a traditional dynamic web server handy (whether that be PHP, Ruby, Node, a Java Servlet Engine, etc) and the tendancy is to lean on its ability to serve static files to deliver your mostly client-side application.
+			</p>
+			<p>
+			But inevitably the developer then hits the point where they really wish that they weren't including 15 static files when a single would do, that the files were compressed or optimized in some fashion, that there was a facility to quickly do string replacement for localization, etc.  As applications or libraries evolve, there becomes an ever expanding need to do minor (or sometimes major) tweaks to the source files before the browser sees them.
+			</p>
+			<p>
+			In almost every setting I have been involved in, at this stage of evolution, some kind of build script emerges that goes through a non-trivial set of gyrations to take the scattered source files and put them together into a form that is best for the browser to consume.  Often times, some kind of switch is present in the page header that says "if I'm in development mode, include all of these random files but if I'm in production just include this one thing."  It seems pretty simple, but I've wasted hours and days trying to track down unexpected issues due to this runtime/build time dichotomy.  Typically, the "development" mode gets tested pretty thouroughly by the developers but the way that the files are manipulated for production often causes last minute discoveries of issues.  There are ways to be smarter about it, but the only thing that I have found to be entirely effective is to remove the difference between development and production.
+			</p>
+			<p>
+			Asset Server provides a web server that can be used to dynamically build all of your assets in response to HTTP requests in your development environment.  Then when you are ready to go to production, you can safely remove it from the mix by issuing a command that dumps its processed output to completely static files that can be served by any web server.  Other configurations are possible, but this is what it is built for.  Think of it as your development CDN.
+			</p>
+			<p>
+			There are still some minor differences between environments, but care has been taken to make sure that these are as minor as possible and that when they would typically cause problems, that the system will fail-fast as opposed to introducing minor logic errors.
+			</p>
+			<p>
+			There is a small set of other tools that do similar things but to my knowledge they are all tied to a specific server-side stack.  These days, I choose my server side stack based on the needs of the application (if doing something real-timy, NodeJS, database backed, Rails, or sometimes Java) and I find it annoying to have to change my client side development practices due to differences or limitations in a particular stack's approach to handling static assets.  The client side has become where the real action is at and it should not be held hostage by completely independent choices made on the server side (assuming there is a server side, which I've just been doing without quite a bit lately).  As a tool, Asset Server fits in anywhere and if used along-side an existing server-side stack, actually promotes best practices by ensuring that static files are accessed from a separate location (thereby making it trivial to introduce a CDN later).  You can, of course, integrate it with your server-side stack, but it is my experience that it is best not to.
+			</p>
+		</div>
+		
+	</div>
+	
+	<div id="footer">
+		Copyright &copy;2011 Stella Laurenzo
+	</div>
+	
+</body>
+</html>
+
