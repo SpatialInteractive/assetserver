@@ -13,6 +13,7 @@
 	<div id="nav">
 		<ul>
 			<li><a href="index.html">Overview</a></li>
+			<li><a href="download.html">Download</a></li>
 			<li><a href="history.html">History</a></li>
 			<li><a href="quickstart.html">Quick Start</a></li>
 			<li><a href="usersguide.html">User's Guide</a></li>
@@ -28,7 +29,7 @@
 			First and foremost, Asset Server is a development platform for managing all of the random files associated with modern web development (ie. "Assets").  There is certainly the potential for a much more clever name, but alas, I am not that creative.  Put another way, it is an attempt to enable modern web development "in the large" in a platform and framework independent fashion.  Modern HTML/JavaScript is an incredibly adept platform for quickly realizing interesting web applications, but as the application grows in scope and complexity, the developer often finds herself wishing for just a little help from the server side when it comes to assembling and managing the explosion of mostly static files that comprise the application.  Many times there is a traditional dynamic web server handy (whether that be PHP, Ruby, Node, a Java Servlet Engine, etc) and the tendancy is to lean on its ability to serve static files to deliver your mostly client-side application.
 			</p>
 			<p>
-			But inevitably the developer then hits the point where they really wish that they weren't including 15 static files when a single would do, that the files were compressed or optimized in some fashion, that there was a facility to quickly do string replacement for localization, etc.  As applications or libraries evolve, there becomes an ever expanding need to do minor (or sometimes major) tweaks to the source files before the browser sees them.
+			But inevitably the developer then hits the point where she really wishes that she wasn't including 15 static files when a single would do, that the files were compressed or optimized in some fashion, that there was a facility to quickly do string replacement for localization, etc.  As applications or libraries evolve, there becomes an ever expanding need to do minor (or sometimes major) tweaks to the source files before the browser sees them.
 			</p>
 			<p>
 			In almost every setting I have been involved in, at this stage of evolution, some kind of build script emerges that goes through a non-trivial set of gyrations to take the scattered source files and put them together into a form that is best for the browser to consume.  Often times, some kind of switch is present in the page header that says "if I'm in development mode, include all of these random files but if I'm in production just include this one thing."  It seems pretty simple, but I've wasted hours and days trying to track down unexpected issues due to this runtime/build time dichotomy.  Typically, the "development" mode gets tested pretty thouroughly by the developers but the way that the files are manipulated for production often causes last minute discoveries of issues.  There are ways to be smarter about it, but the only thing that I have found to be entirely effective is to remove the difference between development and production.
