@@ -9,6 +9,7 @@ import java.util.List;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
+import net.rcode.assetserver.cache.NullCache;
 import net.rcode.assetserver.core.AssetLocator;
 import net.rcode.assetserver.core.AssetPath;
 import net.rcode.assetserver.core.AssetServer;
@@ -68,6 +69,9 @@ public class CopyCommand extends MainCommand {
 		// Boot up the server
 		File configLocation=new File(serverRoot);
 		final AssetServer server=new AssetServer(configLocation);
+		
+		// Disable the cache
+		server.setSharedCache(new NullCache());
 		
 		// Set up for scan
 		ScanConfig config=new ScanConfig();

@@ -137,13 +137,21 @@ public class AssetServer {
 	 * (Re)set the shared cache location.  Resets the sharedCache field.
 	 * @param sharedCacheLocation
 	 */
-	public void setSharedCacheLocation(File sharedCacheLocation) {
+	private void setSharedCacheLocation(File sharedCacheLocation) {
 		this.sharedCacheLocation = sharedCacheLocation;
 		if (sharedCacheLocation==null) {
 			this.sharedCache=null;
 		} else {
 			this.sharedCache=new FileSystemCache(sharedCacheLocation);
 		}
+	}
+	
+	/**
+	 * Set the shared cache
+	 * @param cache
+	 */
+	public void setSharedCache(Cache cache) {
+		this.sharedCache=cache;
 	}
 	
 	/**
