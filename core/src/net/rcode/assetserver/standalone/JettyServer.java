@@ -25,14 +25,6 @@ public class JettyServer {
 	private InetAddress bindAddress;
 	private Server jettyServer;
 	
-	static {
-		// Jetty resets some logging config after class init.  Force the issue and
-		// reset here
-		Class<?> dummy=Server.class;
-		// Set some specific loggers
-		java.util.logging.Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARNING);
-	}
-	
 	public JettyServer(AssetServer server) {
 		this.server=server;
 		this.jettyHandler=new JettyHandler(server);
@@ -73,6 +65,9 @@ public class JettyServer {
 		
 		jettyServer=new Server(sa);
 		jettyServer.setHandler(jettyHandler);
+		
+		// Turn down logging, which jetty configures just after it inits
+		java.util.logging.Logger.getLogger("org.eclipse.jetty").setLevel(Level.WARNING);
 		
 		jettyServer.start();
 	}

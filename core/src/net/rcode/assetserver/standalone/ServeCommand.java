@@ -98,6 +98,7 @@ public class ServeCommand extends MainCommand {
 		}
 		
 		http.setHttpPort(((Integer)optionSet.valueOf("http")).intValue());
+		
 		try {
 			http.start();
 		} catch (BindException e) {
