@@ -51,6 +51,29 @@ global.read=function(resourceName, options) {
 };
 
 /**
+ * Read a resource and return its contents as a Base64 data URI.  Return null
+ * on not found.
+ */
+global.readDataUri=function(resourceName, options) {
+	if (!options) options={};
+	
+	// Normalize the path
+	var relativeTo=PathUtil.dirname(runtime.filterChain.assetPath.fullPath),
+		normalizedPath=PathUtil.normalizePath(relativeTo, resourceName);
+
+	// Get the locator
+	var locator=runtime.server.root.resolve(normalizedPath);
+	if (!locator) return null;
+	
+	return [
+	        'data:',
+	        locator.contentType,
+	        ';base64,',
+	        IOUtil.decodeBufferToString(locator, 'base64')
+	        ].join('');
+};
+
+/**
  * Write to the current resource.  If text===null or text===undefined, then
  * nothing is written.  Otherwise, the value of String(text) is written.
  */

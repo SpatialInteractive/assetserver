@@ -537,13 +537,34 @@ public class EjsParser {
 	 * @return
 	 */
 	private int scanForInterpolationEnd(int start) {
-		// TODO: This needs to account for string literals and brace balancing
+		int braceDepth=1;
+		
 		while (start<source.length()) {
-			if (source.charAt(start)=='}') {
-				position=start+1;
-				return start;
+			char c=source.charAt(start);
+			if (c=='\'' || c=='\"') {
+				// Scan through string literal
+				while (start<source.length()) {
+					char sc=source.charAt(start);
+					if (sc==c && source.charAt(start-1)!='\\') {
+						// End char
+						start+=1;
+						break;
+					}
+					
+					start+=1;
+				}
+			} else {
+				// Process a regular character
+				if (c=='{') braceDepth+=1;
+				if (c=='}') braceDepth-=1;
+
+				if (braceDepth==0) {
+					position=start+1;
+					return start;
+				}
+
+				start+=1;
 			}
-			start+=1;
 		}
 		
 		// End of stream
