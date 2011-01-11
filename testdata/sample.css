@@ -3,6 +3,6 @@
  Compiled at #{new Date()}
 */
 #header, body {
-	background-color: green;
+	background-color: rgb(255, 100, 100);
 }
 
