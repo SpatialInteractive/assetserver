@@ -28,6 +28,15 @@ public class FileSystemCache implements Cache {
 		this.location=location;
 	}
 	
+	@Override
+	public void clear() {
+		File[] entries=location.listFiles();
+		if (entries==null) return;
+		for (File entry: entries) {
+			if (entry.isFile()) entry.delete();
+		}
+	}
+	
 	/* (non-Javadoc)
 	 * @see net.rcode.assetserver.cache.AssetCache#lookup(net.rcode.assetserver.cache.CacheIdentity)
 	 */

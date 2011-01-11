@@ -9,4 +9,5 @@ Targeting v1:
 	- Add HTML control panel
 	- Add charset to readDataUri output
 	- Return Content object instead of String so that proper escaping is automatic
+	- Implement cache cleaning
 

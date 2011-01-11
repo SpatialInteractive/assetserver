@@ -12,6 +12,7 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import net.rcode.assetserver.VersionInfo;
+import net.rcode.assetserver.cache.NullCache;
 import net.rcode.assetserver.core.AssetServer;
 import net.rcode.assetserver.util.IOUtil;
 
@@ -28,7 +29,8 @@ public class ServeCommand extends MainCommand {
 			.defaultsTo(4080);
 		optionParser.accepts("bind", "Bind to a specific network interface address (defaults to all addresses)")
 			.withOptionalArg();
-		
+		optionParser.accepts("clear-cache", "Clear the cache prior to starting");
+		optionParser.accepts("no-cache", "Disable the cache");
 	}
 	
 	@Override
@@ -72,6 +74,17 @@ public class ServeCommand extends MainCommand {
 		// Instantiate the server
 		File configLocation=new File(arguments.get(0));
 		AssetServer server=new AssetServer(configLocation);
+		
+		if (optionSet.has("no-cache")) {
+			AssetServer.logger.info("Disabling cache");
+			server.setSharedCache(new NullCache());
+		} else {
+			if (optionSet.has("clear-cache")) {
+				AssetServer.logger.info("Clearing cache");
+				server.getSharedCache().clear();
+			}
+		}
+		
 		
 		AssetServer.logger.info("Configuration summary:\n" + server.summarizeConfiguration());
 		

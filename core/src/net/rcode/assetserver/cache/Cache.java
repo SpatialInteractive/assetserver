@@ -19,5 +19,9 @@ public interface Cache {
 	 * @param entry
 	 */
 	public void store(CacheEntry entry);
-
+	
+	/**
+	 * Clear the cache
+	 */
+	public void clear();
 }

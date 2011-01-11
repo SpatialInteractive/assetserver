@@ -16,4 +16,8 @@ public class NullCache implements Cache {
 	public void store(CacheEntry entry) {
 	}
 
+	@Override
+	public void clear() {
+	}
+
 }
