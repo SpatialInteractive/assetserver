@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import net.rcode.assetserver.cache.Cache;
+import net.rcode.assetserver.cache.FileSystemCache;
 import net.rcode.assetserver.ejs.EjsRuntime;
 
 import org.slf4j.Logger;
@@ -141,7 +142,7 @@ public class AssetServer {
 		if (sharedCacheLocation==null) {
 			this.sharedCache=null;
 		} else {
-			this.sharedCache=new Cache(sharedCacheLocation);
+			this.sharedCache=new FileSystemCache(sharedCacheLocation);
 		}
 	}
 	
