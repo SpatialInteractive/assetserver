@@ -12,6 +12,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.rcode.assetserver.VersionInfo;
 import net.rcode.assetserver.core.AssetLocator;
 import net.rcode.assetserver.core.AssetRoot;
 import net.rcode.assetserver.core.AssetServer;
@@ -38,9 +39,26 @@ public class JettyHandler extends AbstractHandler {
 			);
 	
 	private AssetServer server;
+	private String serverHeader;
 	
 	public JettyHandler(AssetServer server) {
 		this.server=server;
+		
+		VersionInfo vi=VersionInfo.INSTANCE;
+		String version=vi.getBuildVersion();
+		if ("dev".equals(version)) {
+			version=version + "-" + vi.getBuildTime();
+		}
+		
+		serverHeader="AssetServer (" + version + ")";
+	}
+	
+	public String getServerHeader() {
+		return serverHeader;
+	}
+	
+	public void setServerHeader(String serverHeader) {
+		this.serverHeader = serverHeader;
 	}
 	
 	@Override
@@ -70,6 +88,9 @@ public class JettyHandler extends AbstractHandler {
 	 */
 	protected void handleInContext(String target, Request baseRequest, HttpServletRequest request,
 			HttpServletResponse response) throws IOException, ServletException {
+		// Set server header
+		response.setHeader("Server", serverHeader);
+		
 		AssetRoot root=server.getRoot();
 		if (root==null) {
 			// Not found
