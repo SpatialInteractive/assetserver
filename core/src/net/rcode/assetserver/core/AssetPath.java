@@ -285,8 +285,15 @@ public class AssetPath implements Cloneable {
 			
 			parameters.put(urlDecode(name), urlDecode(value));
 		}
+		
+		parameters=Collections.unmodifiableMap(parameters);
 	}
 
+	public Map<String, String> getParameters() {
+		initParameters();
+		return parameters;
+	}
+	
 	@Override
 	public String toString() {
 		return "AssetPath(mountPoint=" + mountPoint + ", path=" + path + ")";

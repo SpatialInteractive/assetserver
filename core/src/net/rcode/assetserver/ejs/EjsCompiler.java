@@ -3,12 +3,15 @@ package net.rcode.assetserver.ejs;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.rcode.assetserver.ejs.EjsParser.LocationInfo;
 import net.rcode.assetserver.util.IOUtil;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
+import org.mozilla.javascript.Script;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
@@ -20,23 +23,8 @@ import org.mozilla.javascript.ScriptableObject;
 public class EjsCompiler {
 	private EjsRuntime runtime;
 	
-	/**
-	 * The shared template generator.  Has signature function(fragments) and
-	 * iterates over the fragments, evaluating or outputting each
-	 */
-	private Function evaluatorFunction;
-	
 	public EjsCompiler(EjsRuntime runtime) {
 		this.runtime=runtime;
-		
-		CharSequence evaluatorDefn=IOUtil.slurpResource(EjsCompiler.class, "ejsevaluator.js");
-		Context cx=runtime.enter();
-		try {
-			this.evaluatorFunction=cx.compileFunction(runtime.getSharedScope(), evaluatorDefn.toString(), 
-					"ejsevaluator.js", 1, null);
-		} finally {
-			runtime.exit();
-		}
 	}
 	
 	public EjsRuntime getRuntime() {
@@ -95,15 +83,11 @@ public class EjsCompiler {
 	public Function compileTemplate(final Scriptable scope, CharSequence source, final String sourceName) {
 		final Context cx=runtime.enter();
 		try {
-			// Create the fragments array
-			final Scriptable fragments=cx.newArray(scope, 0);
+			final List<Object> fragments=new ArrayList<Object>(256);
 			
 			EjsParser.Events events=new EjsParser.Events() {
-				int fragmentIndex=0;
-				
 				public void handleLiteral(CharSequence text, LocationInfo location) {
-					int index=fragmentIndex++;
-					ScriptableObject.putProperty(fragments, index, text.toString());
+					fragments.add(text.toString());
 				}
 				public void handleInterpolation(CharSequence script, LocationInfo location) {
 					// Compile the generator function
@@ -112,17 +96,11 @@ public class EjsCompiler {
 						.append(script).append(";return (expr===null||expr===undefined) ? null : String(expr);}");
 					Function interpFunction=cx.compileFunction(scope, interpDefn.toString(), 
 							sourceName, location.getLineStart(), null);
-					int index=fragmentIndex++;
-					ScriptableObject.putProperty(fragments, index, interpFunction);
+					fragments.add(interpFunction);
 				}
 				public void handleBlock(CharSequence script, LocationInfo location) {
-					StringBuilder blockDefn=new StringBuilder(script.length()+50);
-					blockDefn.append("function(){").append(script)
-						.append("; return '';}");
-					Function blockFunction=cx.compileFunction(scope, blockDefn.toString(), 
-							sourceName, location.getLineStart(), null);
-					int index=fragmentIndex++;
-					ScriptableObject.putProperty(fragments, index, blockFunction);
+					Script blockScript=cx.compileString(script.toString(), sourceName, location.getLineStart(), null);
+					fragments.add(blockScript);
 				}
 			};
 			
@@ -130,9 +108,51 @@ public class EjsCompiler {
 			parser.parse(source);
 			
 			// Call the evaluator generator with the fragments to get the generator
-			return (Function) evaluatorFunction.call(cx, scope, null, new Object[] { fragments });
+			//return (Function) evaluatorFunction.call(cx, scope, null, new Object[] { fragments });
+			return new GeneratorFunction(fragments);
 		} finally {
 			runtime.exit();
+		}
+	}
+	
+	private static class GeneratorFunction extends ScriptableObject implements Function {
+		private List<Object> fragments;
+		
+		public GeneratorFunction(List<Object> fragments) {
+			this.fragments=fragments;
+		}
+		
+		@Override
+		public Object call(Context cx, Scriptable scope, Scriptable thisObj,
+				Object[] args) {
+			// The first argument must be the writer
+			Function writer=(Function) args[0];
+			for (Object fragment: fragments) {
+				if (fragment instanceof String) {
+					writer.call(cx, scope, null, new Object[] { fragment });
+				} else if (fragment instanceof Script) {
+					((Script)fragment).exec(cx, scope);
+				} else if (fragment instanceof Function) {
+					Object interpValue=((Function)fragment).call(cx, scope, null, new Object[0]);
+					if (interpValue!=null) {
+						writer.call(cx, scope, null, new Object[] { interpValue });
+					}
+				} else {
+					throw new IllegalStateException("Unreocnized type in fragments");
+				}
+			}
+			
+			return null;
+		}
+
+		@Override
+		public Scriptable construct(Context cx, Scriptable scope, Object[] args) {
+			return null;
+		}
+
+		@Override
+		public String getClassName() {
+			return null;
 		}
 	}
 }

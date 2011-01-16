@@ -11,6 +11,7 @@ import net.rcode.assetserver.core.RequestContext;
 import net.rcode.assetserver.core.ResourceFilter;
 import net.rcode.assetserver.util.BlockOutputStream;
 import net.rcode.assetserver.util.IOUtil;
+import net.rcode.assetserver.util.RhinoUtil;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -68,6 +69,8 @@ public class EjsResourceFilter extends ResourceFilter {
 			Function appendableWrite=instance.createAppendableAdapter(out);
 			
 			ScriptableObject.putProperty(runtime, "rawWrite", appendableWrite);
+			ScriptableObject.putProperty(scope, "params",
+					new RhinoUtil.MapScriptable(context.getAssetPath().getParameters(), scope));
 			
 			template.call(cx, scope, null, new Object[] { appendableWrite });
 			out.flush();
