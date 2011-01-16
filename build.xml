@@ -287,6 +287,7 @@ build.version=${build.version}
 				<exclude name="*/bin/assetserver"/>
 			</fileset>
 		</zip>
+		<checksum file="${download.dir}/${dist.basename}-bin-windows.zip" algorithm="md5"/>
 		
 		<tar destfile="${download.dir}/${dist.basename}-bin-generic.tar.gz" compression="gzip" followsymlinks="false">
 			<tarfileset dir="${dist.parent.dir}" username="root" group="root">
@@ -306,6 +307,22 @@ build.version=${build.version}
 				<include name="*/bin/assetserver"/>
 			</tarfileset>
 		</tar>
+		<checksum file="${download.dir}/${dist.basename}-bin-generic.tar.gz" algorithm="md5"/>
+
+		
 	</target>
 	
+	<target name="dist-and-sign" depends="dist">
+		<exec executable="gpg" failifexecutionfails="false">
+			<arg value="--armor"/>
+			<arg value="--detach-sign"/>
+			<arg value="${download.dir}/${dist.basename}-bin-windows.zip"/>
+		</exec>
+	
+		<exec executable="gpg" failifexecutionfails="false">
+			<arg value="--armor"/>
+			<arg value="--detach-sign"/>
+			<arg value="${download.dir}/${dist.basename}-bin-generic.tar.gz"/>
+		</exec>
+	</target>
 </project>
