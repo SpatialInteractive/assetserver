@@ -261,10 +261,14 @@ build.version=${build.version}
 		<copy todir="${dist.dir}/bin" file="${build.dir}/assetserver.exe"/>
 		
 		<!-- Generate the documentation -->
+		<mkdir dir="${build.dir}/site"/>
 		<mkdir dir="${dist.dir}/site"/>
 		<java fork="true" jar="build/assetserver" failonerror="yes">
-			<arg line="cp site ${dist.dir}/site"/>
+			<arg line="cp site ${build.dir}/site"/>
 		</java>
+		<copy todir="${dist.dir}/site">
+			<fileset dir="${build.dir}/site"/>
+		</copy>
 		
 		<!-- Make different distribution files -->
 		<property name="download.dir" location="${build.dir}/download"/>
