@@ -1,0 +1,21 @@
+##EJSON
+##=
+function summarizeParameters() {
+	var k,v,s='';
+	for (k in params) {
+		v=params[k];
+		s+=k+'='+v+'\n';
+	}
+	return s;
+}
+##=
+<!DOCTYPE html>
+<html>
+<body>
+	The time at generation is #{new Date()}
+	<br />
+	Parameters:
+	<pre>#{summarizeParameters().toHtml()}</pre>
+</body>
+</html>
+

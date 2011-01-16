@@ -11,6 +11,20 @@ function navLink(page, name) {
 <html>
 <head>
 	<title>Asset Server - #{params.name}</title>
+	<link rel="stylesheet" href="style.css" />
+	<script type="text/javascript">
+
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-20783704-2']);
+	  _gaq.push(['_trackPageview']);
+	
+	  (function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	
+	</script>
 </head>
 <body>
 	<div id="header">
@@ -24,7 +38,8 @@ function navLink(page, name) {
 			<li>#{navLink('download.html', 'Download')}</li>
 			<li>#{navLink('history.html', 'History')}</li>
 			<li>#{navLink('quickstart.html', 'Quick Start')}</li>
-			<li>#{navLink('usersguide.html', 'User\'s Guide')}</li>
+			<!--li>#{navLink('usersguide.html', 'User\'s Guide')}</li-->
+			<li><a href="https://github.com/stellaeof/assetserver">GitHub Project</a></li>
 		</ul>
 	</div>
 	

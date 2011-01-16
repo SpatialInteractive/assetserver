@@ -1,0 +1,149 @@
+##EJSON
+##include('asinclude/header$page=quickstart.html&name=Quick+Start$.html')
+
+<div id="main">
+
+<h2>Quick Start</h2>
+<div class="section">
+	<p>
+	AssetServer was designed to have intelligent defaults so that new users could get up and running quickly without needing to understand much of what is going on behind the scenes.  The following concepts will help to understand what is going on:
+	</p>
+	<ul>
+		<li>AssetServer manages a tree of resources just like a webserver.  Most simple installations will just have a single physical directory mounted at the webserver root.  However, it is straightforward to glue together a namespace from multiple (potentially overlapping) physical directories by mounting locations into the web namespace.</li>
+		<li>AssetServer maps filters to physical files.  Whenever a resource is requested, the corresponding physical file is found and a configurable set of filters is applied to it.</li>
+		<li>AssetServer operates in two modes: server and build.  In server mode, resources can be requested just as with a normal webserver.  In build mode, the generated resources can be copied (snapshotted) to some other physical location, allowing them to be served by any webserver that can serve static files.</li>
+		<li>The default filter for many file types is "Embedded JavaScript."  This JavaScript-based domain specific language acts as a pre-processor for the resource.  A full understanding of this DSL is not required for most situations.</li>
+	</ul>
+</div>
+
+<h2>Download and Verify</h2>
+<div class="section">
+	<p>
+	Download the latest binaries (if on Windows, download the *-windows.zip file and if on anything else, download *-generic.tar.gz) or source distribution from <a href="http://www.rcode.net/assetserver/download">http://www.rcode.net/assetserver/download</a>.  Checksums and gpg signatures are available at this location. Gpg signatures can be verified against my public key at <a href="http://stella.laurenzo.org/contact/">the contact page on my blog</a>.
+	</p>
+	<p>
+	Either add the bin directory to your path or copy the contents to somewhere already on the path.
+	</p>
+	<p>
+	Get help and verify the version by running:
+	</p>
+	<pre class="code">assetserver version
+assetserver help</pre>
+	<p>
+	If you get any kind of errors, ensure the following:
+	</p>
+	<ul>
+		<li>That a Java 1.5+ installation is present (run "java -version")
+		<li>If on Windows, the JavaSoft registry keys must be present describing the Java installation
+		<li>If the JAVA_HOME environment variable is present, ensure it points to the correct java installation
+		<li>If assetserver still cannot find the Java installation, set the JAVA_HOME environment variable to the directory that contains "bin/java".
+	</ul>
+	<p>
+	If still having issues, send an email to the author via <a href="http://github.com/stellaeof/assetserver">GitHub</a>.
+	</p>
+</div>
+
+<h2>Start the Server</h2>
+<p>
+Create a directory to hold your content and create the config file (the config file is optional, but we will use it later):
+<pre class="code">mkdir webroot
+touch webroot/.asconfig</pre>
+</p>
+
+<p>Start the server:
+<pre>assetserver serve webroot</pre>
+</p>
+<p>The output will be similar to the following:
+<pre>INFO (assetserver): Starting assetserver version dev (built at 2011-01-16 12:43:24 PST on athena by stella)
+INFO (assetserver): Loading server configuration from /Users/stella/tmp/webroot/.asconfig
+INFO (assetserver): No mounts configured. Setting up directory /Users/stella/tmp/webroot as server root.
+INFO (assetserver): Configuration summary:
+Mounts:
+  / => ResourceMount(/Users/stella/tmp/webroot)
+Root Filters:
+  1. NamePatternPredicate(*.js) => Standard Embedded JavaScript Filter
+  2. NamePatternPredicate(*.css) => Standard Embedded JavaScript Filter
+  3. NamePatternPredicate(*.html) => Standard Embedded JavaScript Filter
+  4. NamePatternPredicate(*.js) => YUI JavaScript Optimizer
+  5. NamePatternPredicate(*.css) => YUI CSS Optimizer
+  6. NamePatternPredicate(*.svg) => SVG Render Filter
+
+INFO (httpserver): Starting HTTP server on port 4080 (all addresses)
+</pre>
+</p>
+<p>
+Without further configuration, the server starts with a fair number of details.  Some configuration is done via the .asconfig file (see the user's guide) and other is done on the command line.  To see command line options, run:
+<pre>assetserver help serve</pre>
+</p>
+</div>
+
+<h2>Add Some Content</h2>
+<p>
+Create a file webroot/test.html with the following content:
+<pre>#{read('samples/test.txt').toHtml()}</pre>
+</pre>
+</p>
+<p>
+Access the resource by pointing your web browser to <a href="http://localhost:4080/test.html">http://localhost:4080/test.html</a>
+</p>
+<p>
+AssetServer resources can be parameterized by mangling the name with a special syntax similar to a query string but intended to produce legal filenames that can then be served statically by standard web servers.  For example:
+<ul>
+<li>http://localhost:4080/test$param1=value1$.html
+<li>http://localhost:4080/test$param1=1&amp;param2=2$.html
+</ul>
+</p>
+
+<h3>Explanation of test.html</h3>
+<p>
+test.html uses several EJS constructs:
+<ul>
+<li>##EJSON directive turns on EJS proccessing for the remainder of the file (or until a corresponding EJSOFF or EJSDISABLE directive)
+<li>A JavaScript block is introduced between the ##= delimitters
+<li>Inline interpolations are used with the syntax ##{...}
+<li>The builtin params object and the String.prototype extension toHtml are referenced
+</ul>
+</p>
+<p>
+A full treatment of EJS is available in the user's guide, but here are some highlights of additional builtins:
+<ul>
+<li>String.prototype extensions: toJs(), toJava(), toHtml(), toXml()
+<li>read(resourceName, options): Reads a resource (relative to the caller) into a string
+<li>readDataUri(resourceName, options): Read a resource and return a data uri
+<li>write(text): Write content to the resource being generated
+<li>include(resourceName, options): Include another resource
+<li>requestedPath(): The absolute resource path of the top-level resource requested by the user-agent (as opposed to the path of the currently included resource)
+<li>thisPath(): The absolute resource path to the resource currently being generated
+<li>clientRelative(path): Given a relative path, return a path adjusted to be relative to the resource the user-agent requested (ideal for dealing with pesky CSS relative paths with include files)
+</ul>
+</p>
+<p>
+All builtins that operate on resources (read, include, etc) explicitly manage caching such that you can always be guaranteed that saving a deeply nested resource will cause the regeneration of all parent resources.
+</p>
+
+<h2>Create a Snapshot</h2>
+<p>
+Typically, development will proceed directly using the "assetserver serve" web server, but for a production deployment, it is recommended to snapshot all or part of your development tree by using the "assetserver cp" command.
+</p>
+<p>
+There are several options available to the cp command and full help is available with "assetserver help cp".  The simplest form just dumps the processed version of the resource tree to a directory:
+<pre>mkdir htdocs
+assetserver cp webroot htdocs</pre>
+<p>
+After running this, the htdocs directory will contain the generated versions of every resource accessible by the configuration.
+</p>
+
+<h2>Mounting Other Locations</h2>
+<p>
+Typically, I will have multiple source locations that I would like to link together into one unified view.  I can do this with assetserver mounts.  By default, if no mounts are explicitly configured, the server will mount the server root directory as the root path (/).  Add mounts by modifying the .asconfig file created earlier:
+</p>
+<pre>
+mount('/', '.');	// Add explicit root mount
+mount('/myutils', '../libs/myutils');
+</pre>
+<p>
+This adds an explicit root directory mount and then mounts some utilities under the /myutils path.  Note that all filesystem paths in the .asconfig file are relative to the directory containing the .asconfig file.  The file itself is just a JavaScript source file with various builtins that exist for configuring the server.
+</p>
+
+##include('asinclude/footer.html')
+

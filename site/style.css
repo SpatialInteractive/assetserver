@@ -1,0 +1,27 @@
+body {
+	line-height: 18px;
+	font-family: arial, sans-serif;
+	font-size: 14px;
+}
+
+#footer {
+	font-size: 10px;
+	text-align: center;	
+}
+
+#nav a.current {
+	font-weight: bold;
+	text-decoration: none;
+}
+
+a {
+	color: blue;	
+}
+a:visited {
+	color: blue;
+}
+
+pre {
+	padding-left: 36px;	
+}
+
