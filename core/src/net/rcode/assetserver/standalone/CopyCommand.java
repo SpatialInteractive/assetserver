@@ -25,7 +25,8 @@ import net.rcode.assetserver.util.IOUtil;
  *
  */
 public class CopyCommand extends MainCommand {
-
+	public static final String DESCRIPTION="Copy resources to the filesystem";
+	
 	private OptionParser optionParser;
 	
 	public CopyCommand() {
