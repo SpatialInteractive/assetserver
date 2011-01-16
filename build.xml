@@ -261,9 +261,9 @@ build.version=${build.version}
 		<copy todir="${dist.dir}/bin" file="${build.dir}/assetserver.exe"/>
 		
 		<!-- Generate the documentation -->
-		<mkdir dir="${dist.dir}/documentation"/>
+		<mkdir dir="${dist.dir}/site"/>
 		<java fork="true" jar="build/assetserver" failonerror="yes">
-			<arg line="cp . ${dist.dir}/documentation"/>
+			<arg line="cp site ${dist.dir}/site"/>
 		</java>
 		
 		<!-- Make different distribution files -->
