@@ -34,4 +34,9 @@ public class ResourceStat {
 	 * generated in response to a batch operation.
 	 */
 	public Collection<AssetPath> associatedResources;
+	
+	@Override
+	public String toString() {
+		return "ResourceStat(" + path + ")";
+	}
 }

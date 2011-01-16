@@ -98,7 +98,9 @@ public class AssetPath implements Cloneable {
 	
 	private AssetPath copy() {
 		try {
-			return (AssetPath) clone();
+			AssetPath ret=(AssetPath) clone();
+			ret.cacheFullPath=null;
+			return ret;
 		} catch (CloneNotSupportedException e) {
 			// Cannot happen
 			throw new RuntimeException(e);
