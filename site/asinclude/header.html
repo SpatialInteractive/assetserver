@@ -1,0 +1,31 @@
+##EJSON
+##=
+function navLink(page, name) {
+	var className='';
+	if (page===params.page) className+=' current';
+	
+	return '<a href="' + page + '" class="' + className.toJs() + '">' + name + '</a>';
+}
+##=
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Asset Server - #{params.name}</title>
+</head>
+<body>
+	<div id="header">
+		<h1>Asset Server
+		</h1>
+	</div>
+	
+	<div id="nav">
+		<ul>
+			<li>#{navLink('index.html', 'Overview')}</li>
+			<li>#{navLink('download.html', 'Download')}</li>
+			<li>#{navLink('history.html', 'History')}</li>
+			<li>#{navLink('quickstart.html', 'Quick Start')}</li>
+			<li>#{navLink('usersguide.html', 'User\'s Guide')}</li>
+		</ul>
+	</div>
+	
+	<div id="content">
