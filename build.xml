@@ -221,8 +221,13 @@ build.version=${build.version}
 	</target>
 	
 	<!-- copy the unix executable to the $HOME/bin dir.  This is just for me -->
-	<target name="install" depends="jar">
+	<target name="install" depends="all">
 		<copy todir="${env.HOME}/bin" file="build/assetserver"/>
+		<copy todir="${env.HOME}/bin">
+			<fileset dir="build">
+				<include name="*.asaddon"/>
+			</fileset>
+		</copy>
 		<chmod perm="a+x" file="${env.HOME}/bin/assetserver"></chmod>
 	</target>
 	
