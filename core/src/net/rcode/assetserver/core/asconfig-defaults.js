@@ -5,5 +5,4 @@
 filter.on('*.js', '*.css', '*.html', 'ejs');
 filter.on('*.js', 'jsoptimize');
 filter.on('*.css', 'cssoptimize');
-filter.on('*.svg', 'svgrender');
 

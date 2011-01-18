@@ -57,9 +57,9 @@ public class FilterChainInitializerLookup {
 				"cssoptimize");
 		
 		// Svg
-		alias(classPrefix + "svg.SvgRenderResourceFilter",
-				"#std-svgrender",
-				"svgrender");
+		//alias(classPrefix + "svg.SvgRenderResourceFilter",
+		//		"#std-svgrender",
+		//		"svgrender");
 	}
 	
 	/**

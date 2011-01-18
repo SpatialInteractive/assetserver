@@ -4,7 +4,6 @@ import static org.junit.Assert.assertTrue;
 import net.rcode.assetserver.ejs.EjsResourceFilter;
 import net.rcode.assetserver.optimizer.YuiOptimizeCssResourceFilter;
 import net.rcode.assetserver.optimizer.YuiOptimizeJsResourceFilter;
-import net.rcode.assetserver.svg.SvgRenderResourceFilter;
 
 import org.junit.Test;
 
@@ -26,9 +25,6 @@ public class FilterChainInitializerLookupTest {
 
 		assertTrue(lookup.lookup("cssoptimize") instanceof YuiOptimizeCssResourceFilter);
 		assertTrue(lookup.lookup("#yui-cssoptimize") instanceof YuiOptimizeCssResourceFilter);
-		
-		assertTrue(lookup.lookup("svgrender") instanceof SvgRenderResourceFilter);
-		assertTrue(lookup.lookup("#std-svgrender") instanceof SvgRenderResourceFilter);
 		
 	}
 }
