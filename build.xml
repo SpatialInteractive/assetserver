@@ -220,17 +220,6 @@ build.version=${build.version}
 		<jarexec target="exe" source="${build.jar.dir}/assetserver-main.jar" dest="${build.jar.dir}/assetserver.exe"/>
 	</target>
 	
-	<!-- copy the unix executable to the $HOME/bin dir.  This is just for me -->
-	<target name="install" depends="all">
-		<copy todir="${env.HOME}/bin" file="build/assetserver"/>
-		<copy todir="${env.HOME}/bin">
-			<fileset dir="build">
-				<include name="*.asaddon"/>
-			</fileset>
-		</copy>
-		<chmod perm="a+x" file="${env.HOME}/bin/assetserver"></chmod>
-	</target>
-	
 	<!-- Create a build/dist directory with the full distribution contents.  Then create
 	     zip and tarballs for different platforms by applying excludes -->
 	<target name="dist" depends="clean,all">
@@ -342,13 +331,17 @@ build.version=${build.version}
 	<macrodef name="build-addon">
 		<attribute name="name"/>
 		<attribute name="dir"/>
+		<element name="contents"/>
 		
 		<sequential>
 			<echo>Building addon @{name} from @{dir}</echo>
 		
 			<local name="addon.build.dir"/>
+			<local name="addon.dir"/>
 			
 			<property name="addon.build.dir" location="${build.dir}/addon/@{name}"/>
+			<property name="addon.dir" location="@{dir}"/>
+			
 			<mkdir dir="${addon.build.dir}"/>
 			<mkdir dir="${addon.build.dir}/classes"/>
 			
@@ -379,21 +372,39 @@ build.version=${build.version}
 			<jar destfile="${build.dir}/@{name}.asaddon">
 				<zipfileset dir="${addon.build.dir}/classes" prefix="addon"/>
 				<zipfileset dir="@{dir}" includes="asaddon.properties"/>
-				<mappedresources>
-					<archives>
-						<zips>
-							<fileset dir="@{dir}/lib" includes="*.jar"/>
-						</zips>
-					</archives>
-					<globmapper from="*" to="depend/*"/>
-				</mappedresources>
+				<contents/>
 			</jar>
 		</sequential>
 	</macrodef>
 	
-	<target name="addons" depends="addon-svgrender"/>
+	<target name="addons" depends="addon-svgrender,addon-htmlpack"/>
 	<target name="addon-svgrender" depends="compile">
-		<build-addon name="svgrender" dir="addons/svgrender"/>
+		<build-addon name="svgrender" dir="addons/svgrender">
+			<contents>
+				<zipfileset prefix="depend" src="${addon.dir}/lib/svgSalamander.jar"/>
+			</contents>
+		</build-addon>
+	</target>
+	<target name="addon-htmlpack" depends="compile">
+		<build-addon name="htmlpack" dir="addons/htmlpack">
+			<contents>
+				<zipfileset prefix="depend" src="${addon.dir}/lib/tagsoup-1.2.jar"/>
+			</contents>
+		</build-addon>
+	</target>
+	
+	<!-- copy the unix executable to the $HOME/bin dir.  This is just for me -->
+	<target name="install" depends="all,install-addons">
+		<copy todir="${env.HOME}/bin" file="build/assetserver"/>
+		<chmod perm="a+x" file="${env.HOME}/bin/assetserver"></chmod>
+	</target>
+	
+	<target name="install-addons" depends="addons">
+		<copy todir="${env.HOME}/bin">
+			<fileset dir="build">
+				<include name="*.asaddon"/>
+			</fileset>
+		</copy>
 	</target>
 	
 	<target name="all" depends="jar,addons"/>
