@@ -1,4 +1,4 @@
-<project name="assetserver" default="jar">
+<project name="assetserver" default="all">
 	<property name="build.dir" location="build"/>
 	<property name="build.jar.dir" location="${build.dir}"/>
 	<property name="build.core.classes" location="${build.dir}/core/classes"/>
@@ -199,6 +199,7 @@ build.version=${build.version}
 			<fileset dir="skeleton/assetserver-main"/>
 			
 			<zipfileset prefix="lib/core" src="${build.jar.dir}/assetserver-core.jar"/>
+			
 			<zipfileset prefix="lib/depend" src="lib/core/slf4j-api-1.6.1.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/core/slf4j-jdk14-1.6.1.jar"/>
 			<zipfileset prefix="lib/depend" src="lib/core/commons-lang3-3.0-beta.jar"/>
@@ -227,7 +228,7 @@ build.version=${build.version}
 	
 	<!-- Create a build/dist directory with the full distribution contents.  Then create
 	     zip and tarballs for different platforms by applying excludes -->
-	<target name="dist" depends="clean,jar">
+	<target name="dist" depends="clean,all">
 		<property name="dist.basename" value="assetserver-${build.version}"/>
 		<property name="dist.parent.dir" location="${build.dir}/dist"/>
 		<property name="dist.dir" location="${dist.parent.dir}/${dist.basename}"/>
@@ -257,6 +258,11 @@ build.version=${build.version}
 		<mkdir dir="${dist.dir}/bin"/>
 		<copy todir="${dist.dir}/bin" file="${build.dir}/assetserver"/>
 		<copy todir="${dist.dir}/bin" file="${build.dir}/assetserver.exe"/>
+		<copy todir="${dist.dir}/bin">
+			<fileset dir="${build.dir}">
+				<include name="*.asaddon"/>
+			</fileset>
+		</copy>
 		
 		<!-- Generate the documentation -->
 		<mkdir dir="${build.dir}/site"/>
@@ -327,4 +333,64 @@ build.version=${build.version}
 			<arg value="${download.dir}/${dist.basename}-bin-generic.tar.gz"/>
 		</exec>
 	</target>
+	
+	<macrodef name="build-addon">
+		<attribute name="name"/>
+		<attribute name="dir"/>
+		
+		<sequential>
+			<echo>Building addon @{name} from @{dir}</echo>
+		
+			<local name="addon.build.dir"/>
+			
+			<property name="addon.build.dir" location="${build.dir}/addon/@{name}"/>
+			<mkdir dir="${addon.build.dir}"/>
+			<mkdir dir="${addon.build.dir}/classes"/>
+			
+			
+			<javac srcdir="@{dir}/src" 
+				destdir="${addon.build.dir}/classes"
+				includeantruntime="false"
+				encoding="UTF-8" debug="${javac.debug}" debuglevel="${javac.debuglevel}"
+				source="${javac.source}"
+				target="${javac.target}">
+				
+				<classpath>
+					<pathelement location="${build.cphelp.classes}"/>
+					<pathelement location="${build.core.classes}"/>
+					<path refid="core.classpath"/>
+					
+					<fileset dir="@{dir}/lib">
+						<include name="**/*.jar"/>
+					</fileset>
+				</classpath>
+			</javac>
+			<copy todir="${addon.build.dir}/classes">
+				<fileset dir="@{dir}/src">
+					<exclude name="**/*.java"/>
+				</fileset>
+			</copy>
+			
+			<jar destfile="${build.dir}/@{name}.asaddon">
+				<zipfileset dir="${addon.build.dir}/classes" prefix="addon"/>
+				<zipfileset dir="@{dir}" includes="asaddon.properties"/>
+				<mappedresources>
+					<archives>
+						<zips>
+							<fileset dir="@{dir}/lib" includes="*.jar"/>
+						</zips>
+					</archives>
+					<globmapper from="*" to="depend/*"/>
+				</mappedresources>
+			</jar>
+		</sequential>
+	</macrodef>
+	
+	<target name="addons" depends="addon-svgrender"/>
+	<target name="addon-svgrender" depends="compile">
+		<build-addon name="svgrender" dir="addons/svgrender"/>
+	</target>
+	
+	<target name="all" depends="jar,addons"/>
 </project>
+
