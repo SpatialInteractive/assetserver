@@ -36,4 +36,11 @@ global.mount=function(serverPath, physicalDirectory) {
 	server.getRoot().add(String(serverPath), resourceMount);
 };
 
+/**
+ * Load an addon
+ */
+global.loadAddon=function(name) {
+	server.addonManager.load(name);
+};
+
 })(this);

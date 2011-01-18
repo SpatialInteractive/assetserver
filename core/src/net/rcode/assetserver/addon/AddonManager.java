@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +80,10 @@ public class AddonManager {
 		return searchPath;
 	}
 	
+	public Collection<String> getNames() {
+		return Collections.unmodifiableCollection(addons.keySet());
+	}
+	
 	protected File findByName(String name) {
 		// If name is a path, then treat it as a file
 		if (name.indexOf('/')>=0 || name.indexOf('\\')>=0) {
@@ -134,7 +140,7 @@ public class AddonManager {
 		try {
 			propIn=propUrl.openStream();
 		} catch (IOException e) {
-			throw new RuntimeException("Cannot load addon " + name + " from " + entry.jarUrl + " because no adaddon.properties file was found.");
+			throw new RuntimeException("Cannot load addon " + name + " from " + entry.jarUrl + " because no asaddon.properties file was found.");
 		}
 		try {
 			entry.properties.load(propIn);

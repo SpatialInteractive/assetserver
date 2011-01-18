@@ -1,0 +1,4 @@
+loadAddon('svgrender');
+
+filter.on('*.svg', 'svgrender');
+

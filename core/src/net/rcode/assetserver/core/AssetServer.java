@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -40,6 +41,7 @@ public class AssetServer {
 	private File sharedCacheLocation;
 	private Cache sharedCache;
 	private AddonManager addonManager;
+	private FilterChainInitializerLookup filterLookup;
 	
 	private ServerConfig config;
 	
@@ -74,7 +76,7 @@ public class AssetServer {
 		// Initialize the context builder and the root context
 		ResourceContextBuilder contextBuilder=new ResourceContextBuilder();
 		ResourceContext rootContext=new ResourceContext(null);
-		FilterChainInitializerLookup filterLookup=new FilterChainInitializerLookup();
+		filterLookup=new FilterChainInitializerLookup();
 		filterLookup.addBuiltins();
 		
 		rootContext.setFilterLookup(filterLookup);
@@ -116,6 +118,14 @@ public class AssetServer {
 	
 	public Logger getLogger() {
 		return logger;
+	}
+	
+	public AddonManager getAddonManager() {
+		return addonManager;
+	}
+	
+	public FilterChainInitializerLookup getFilterLookup() {
+		return filterLookup;
 	}
 	
 	public String getDefaultTextFileEncoding() {
@@ -248,6 +258,17 @@ public class AssetServer {
 			out.append('\n');
 			
 			i+=1;
+		}
+		
+		// addons
+		Collection<String> addonNames=addonManager.getNames();
+		if (!addonNames.isEmpty()) {
+			out.append("Activated addons:\n");
+			for (String name: addonNames) {
+				out.append("  ");
+				out.append(name);
+				out.append('\n');
+			}
 		}
 		
 		return out;

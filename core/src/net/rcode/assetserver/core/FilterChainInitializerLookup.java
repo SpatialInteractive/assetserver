@@ -73,6 +73,16 @@ public class FilterChainInitializerLookup {
 		}
 	}
 	
+	/**
+	 * Establish a hard binding to a filter.  This is used by addons to register actual
+	 * instances instead of aliases.
+	 * @param name
+	 * @param initializer
+	 */
+	public void set(String name, FilterChainInitializer initializer) {
+		instanceCache.put(name, initializer);
+	}
+	
 	public FilterChainInitializer lookup(String name) {
 		// Process aliases
 		String aliasedName;
