@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import net.rcode.assetserver.addon.AddonManager;
 import net.rcode.assetserver.cache.Cache;
 import net.rcode.assetserver.cache.FileSystemCache;
 import net.rcode.assetserver.ejs.EjsRuntime;
@@ -38,6 +39,7 @@ public class AssetServer {
 	private MimeMapping mimeMapping;
 	private File sharedCacheLocation;
 	private Cache sharedCache;
+	private AddonManager addonManager;
 	
 	private ServerConfig config;
 	
@@ -54,6 +56,20 @@ public class AssetServer {
 		setSharedCacheLocation(new File(configDirectory, ".ascache"));
 		
 		root=new AssetRoot(this);
+		
+		// Setup addon manager
+		addonManager=new AddonManager(this);
+		
+		// Add the directory containing the executable to the addon search path
+		String execFileName=System.getProperty("exec.file");	// Set by the launchers
+		if (execFileName==null) {
+			logger.warn("No exec.file system property.  This is needed to discover addons.");
+		} else {
+			addonManager.getSearchPath().add(new File(execFileName).getParentFile());
+		}
+		
+		// Add the .asaddon directory
+		addonManager.getSearchPath().add(new File(configDirectory, ".asaddon"));
 		
 		// Initialize the context builder and the root context
 		ResourceContextBuilder contextBuilder=new ResourceContextBuilder();
