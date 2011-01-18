@@ -24,6 +24,7 @@ public class EjsRuntime {
 	private static Logger ejsLogger=LoggerFactory.getLogger("ejs");
 	
 	private ScriptableObject sharedScope;
+	private Scriptable hostObjects;
 	private boolean useDynamicScope;
 	private LocalFactory contextFactory=new LocalFactory();
 	
@@ -96,6 +97,10 @@ public class EjsRuntime {
 			sharedScope=cx.initStandardObjects(null, seal);
 			ScriptableObject.putProperty(sharedScope, "global", sharedScope);
 			ScriptableObject.putProperty(sharedScope, "logger", Context.javaToJS(ejsLogger, sharedScope));
+			
+			hostObjects=cx.newObject(sharedScope);
+			ScriptableObject.putProperty(sharedScope, "hostobjects", hostObjects);
+			
 			if (seal) sharedScope.sealObject();
 		} finally {
 			exit();
@@ -110,6 +115,10 @@ public class EjsRuntime {
 		return sharedScope;
 	}
 	
+	public Scriptable getHostObjects() {
+		return hostObjects;
+	}
+	
 	public Scriptable createRuntimeScope() {
 		Context ctx=Context.enter();
 		
@@ -119,6 +128,10 @@ public class EjsRuntime {
 		} finally {
 			Context.exit();
 		}
+	}
+	
+	public Object javaToJs(Object java) {
+		return Context.javaToJS(java, sharedScope);
 	}
 	
 	public void loadLibrary(Reader source, String name) {

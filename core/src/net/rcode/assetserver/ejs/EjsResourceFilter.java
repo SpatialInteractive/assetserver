@@ -30,21 +30,16 @@ import org.mozilla.javascript.ScriptableObject;
  *
  */
 public class EjsResourceFilter extends ResourceFilter {
-	private EjsRuntime runtime;
-	private EjsCompiler compiler;
-
 	public EjsResourceFilter() {
 		super("ejs");
-		runtime=new EjsRuntime();
-		runtime.loadLibraryStd();
-		
-		compiler=new EjsCompiler(runtime);
 	}
 
 	@Override
 	public AssetLocator filter(FilterChain context, AssetLocator source)
 			throws Exception {
-		EjsRuntime.Instance instance=runtime.createInstance();
+		final EjsRuntime ejsRuntime=context.getServer().getJavascriptRuntime();
+		EjsCompiler compiler=new EjsCompiler(ejsRuntime);
+		EjsRuntime.Instance instance=ejsRuntime.createInstance();
 		
 		// Generate the content
 		String encoding=source.getCharacterEncoding();
@@ -53,7 +48,7 @@ public class EjsResourceFilter extends ResourceFilter {
 		BlockOutputStream outBuffer=new BlockOutputStream();
 		OutputStreamWriter out=new OutputStreamWriter(outBuffer, encoding);
 		
-		Context cx=runtime.enter();
+		Context cx=ejsRuntime.enter();
 		try {
 			// Establish globals
 			Scriptable scope=instance.getScope();
@@ -75,7 +70,7 @@ public class EjsResourceFilter extends ResourceFilter {
 			template.call(cx, scope, null, new Object[] { appendableWrite });
 			out.flush();
 		} finally {
-			runtime.exit();
+			ejsRuntime.exit();
 		}
 		
 		// Return the locator
