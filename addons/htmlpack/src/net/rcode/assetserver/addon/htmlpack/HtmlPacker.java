@@ -65,7 +65,7 @@ public class HtmlPacker {
 	 * @return result
 	 */
 	public CharSequence pack() {
-		
+		return null;
 	}
 	
 	/**
