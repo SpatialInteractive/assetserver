@@ -1,5 +1,6 @@
 package net.rcode.assetserver.addon.htmlpack;
 
+import java.io.Reader;
 import java.io.StringWriter;
 import java.util.regex.Pattern;
 
@@ -19,7 +20,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
 /**
  * Given a Document Element, builds a packed representation.  The representation is syntactically a nested
@@ -69,7 +69,7 @@ public class HtmlPacker implements Cloneable {
 	private static final Pattern CLASSSPLIT=Pattern.compile("\\s+");
 	
 	private Element rootElement;
-	private String idAttribute="id";
+	private String idAttribute="outlet";
 	private String cssClassAttribute="class";
 	
 	public HtmlPacker(Element rootElement) {
@@ -98,9 +98,64 @@ public class HtmlPacker implements Cloneable {
 		}
 		
 		// Not found
-		return copyWith(null);
+		return null;
 	}
 	
+	/**
+	 * 
+	 * @param id
+	 * @return an html packer on the given id
+	 */
+	public HtmlPacker selectById(String id) {
+		return selectByAttribute("id", id);
+	}
+	
+	public static interface ElementPredicate {
+		public boolean matches(Element elt);
+	}
+	
+	/**
+	 * 
+	 * @param string
+	 * @param id
+	 * @return an HtmlPacker around the element with the given attribute
+	 */
+	public HtmlPacker selectByAttribute(final String name, final String value) {
+		return select(new ElementPredicate() {
+			
+			@Override
+			public boolean matches(Element elt) {
+				Attr attr=elt.getAttributeNode(name);
+				if (attr==null) return false;
+				return value.equals(attr.getValue());
+			}
+		});
+	}
+
+	public HtmlPacker select(ElementPredicate predicate) {
+		return selectDescendent(rootElement, predicate);
+	}
+	
+	private HtmlPacker selectDescendent(Element elt,
+			ElementPredicate predicate) {
+		for (Node child=elt.getFirstChild(); child!=null; child=child.getNextSibling()) {
+			if (child.getNodeType()==Node.ELEMENT_NODE) {
+				Element childElt=(Element) child;
+				if (predicate.matches(childElt)) return copyWith(childElt);
+			}
+		}
+		
+		for (Node child=elt.getFirstChild(); child!=null; child=child.getNextSibling()) {
+			if (child.getNodeType()==Node.ELEMENT_NODE) {
+				Element childElt=(Element) child;
+				HtmlPacker ret=selectDescendent(childElt, predicate);
+				if (ret!=null) return ret;
+			}
+		}
+		
+		return null;
+	}
+
 	/**
 	 * Pack the current element, returning a CharSequence of the result
 	 * @return result
@@ -289,20 +344,15 @@ public class HtmlPacker implements Cloneable {
 		}
 	}
 	
-	public static HtmlPacker parse(InputSource source) throws Exception {
+	public static HtmlPacker parse(Reader reader) throws Exception {
 		initSettings();
 		
 		HtmlCleaner cleaner=new HtmlCleaner(htmlcleanerTagInfo);
 		TagNode rootNode;
-		if (source.getCharacterStream()!=null) {
-			rootNode=cleaner.clean(source.getCharacterStream());
-		} else {
-			throw new IllegalStateException("InputSource not supported");
-		}
+		rootNode=cleaner.clean(reader);
 		
 		DomSerializer s=new DomSerializer(cleaner.getProperties());
 		Node node=s.createDOM(rootNode);
-		dumpDom(node);
 		
 		Element element;
 		if (node instanceof Element) element=(Element) node;

@@ -1,22 +1,21 @@
 package net.rcode.assetserver.addon.htmlpack;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.StringReader;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
-
-import org.xml.sax.InputSource;
 
 public class HtmlPackerTest {
 
 	@Test
 	public void testTagNames() throws Exception {
 		verifyPack("['p']", "<p>");
-		verifyPack("['p#myid']", "<p id='myid'>");
-		verifyPack("['p#myid.class1']", "<p id='myid' class='class1'>");
-		verifyPack("['p#myid.class1']", "<p id='myid' class=' class1'>");
-		verifyPack("['p#myid.class1']", "<p id='myid' class='class1 '>");
-		verifyPack("['p#myid.class1.class2']", "<p id='myid' class='class1 class2'>");
+		verifyPack("['p#myid']", "<p outlet='myid'>");
+		verifyPack("['p#myid.class1']", "<p outlet='myid' class='class1'>");
+		verifyPack("['p#myid.class1']", "<p outlet='myid' class=' class1'>");
+		verifyPack("['p#myid.class1']", "<p outlet='myid' class='class1 '>");
+		verifyPack("['p#myid.class1.class2']", "<p outlet='myid' class='class1 class2'>");
 	}
 	
 	@Test
@@ -27,7 +26,7 @@ public class HtmlPackerTest {
 	}
 	
 	private void verifyPack(String expected, String html) throws Exception {
-		HtmlPacker packer=HtmlPacker.parse(new InputSource(new StringReader(html)));
+		HtmlPacker packer=HtmlPacker.parse(new StringReader(html));
 		packer=packer.selectFirstChild();
 		String actual=packer.pack().toString();
 		assertEquals(expected, actual);
