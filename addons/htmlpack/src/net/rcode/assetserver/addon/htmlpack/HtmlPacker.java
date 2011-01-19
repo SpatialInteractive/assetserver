@@ -71,6 +71,7 @@ public class HtmlPacker implements Cloneable {
 	private Element rootElement;
 	private String idAttribute="outlet";
 	private String cssClassAttribute="class";
+	private String fragmentId="fragment";
 	
 	public HtmlPacker(Element rootElement) {
 		this.rootElement=rootElement;
@@ -99,15 +100,6 @@ public class HtmlPacker implements Cloneable {
 		
 		// Not found
 		return null;
-	}
-	
-	/**
-	 * 
-	 * @param id
-	 * @return an html packer on the given id
-	 */
-	public HtmlPacker selectById(String id) {
-		return selectByAttribute("id", id);
 	}
 	
 	public static interface ElementPredicate {
@@ -182,7 +174,7 @@ public class HtmlPacker implements Cloneable {
 			
 			String name=attr.getName();
 			// If one of our special names, ignore
-			if (name.equalsIgnoreCase(idAttribute) || name.equalsIgnoreCase(cssClassAttribute))
+			if (ignoreAttribute(name))
 				continue;
 			
 			// Otherwise, output it
@@ -256,6 +248,11 @@ public class HtmlPacker implements Cloneable {
 		out.append(']');
 	}
 	
+	private boolean ignoreAttribute(String name) {
+		return name.equalsIgnoreCase(idAttribute) || name.equalsIgnoreCase(cssClassAttribute) ||
+			name.equalsIgnoreCase(fragmentId);
+	}
+
 	private static final Pattern SPACE_PATTERN=Pattern.compile("\\s+", Pattern.MULTILINE);
 	private boolean isWhitespace(String textValue) {
 		return SPACE_PATTERN.matcher(textValue).matches();

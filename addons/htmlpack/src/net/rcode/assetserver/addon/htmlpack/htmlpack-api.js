@@ -10,7 +10,7 @@ function htmlpackString(htmlText, locator, options, sourceName) {
 	if (!locator) {
 		packer=packer.selectFirstChild();
 	} else {
-		packer=packer.selectById(String(locator));
+		packer=packer.selectByAttribute("fragment", String(locator));
 	}
 	
 	if (!packer) {
