@@ -388,7 +388,7 @@ build.version=${build.version}
 	<target name="addon-htmlpack" depends="compile">
 		<build-addon name="htmlpack" dir="addons/htmlpack">
 			<contents>
-				<zipfileset prefix="depend" src="${addon.dir}/lib/tagsoup-1.2.jar"/>
+				<zipfileset prefix="depend" src="${addon.dir}/lib/htmlcleaner-2.2.jar"/>
 			</contents>
 		</build-addon>
 	</target>
