@@ -1,15 +1,25 @@
 package net.rcode.assetserver.addon.htmlpack;
 
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.sax.SAXSource;
+import java.io.StringWriter;
+import java.util.regex.Pattern;
 
-import org.ccil.cowan.tagsoup.Parser;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.htmlcleaner.ConfigFileTagProvider;
+import org.htmlcleaner.DomSerializer;
+import org.htmlcleaner.HtmlCleaner;
+import org.htmlcleaner.ITagInfoProvider;
+import org.htmlcleaner.TagNode;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
 
 /**
  * Given a Document Element, builds a packed representation.  The representation is syntactically a nested
@@ -53,11 +63,42 @@ import org.xml.sax.XMLReader;
  * @author stella
  *
  */
-public class HtmlPacker {
+public class HtmlPacker implements Cloneable {
+	private static ITagInfoProvider htmlcleanerTagInfo;
+	
+	private static final Pattern CLASSSPLIT=Pattern.compile("\\s+");
+	
 	private Element rootElement;
+	private String idAttribute="id";
+	private String cssClassAttribute="class";
 	
 	public HtmlPacker(Element rootElement) {
 		this.rootElement=rootElement;
+	}
+	
+	public HtmlPacker copyWith(Element newRoot) {
+		try {
+			HtmlPacker ret=(HtmlPacker) clone();
+			ret.rootElement=newRoot;
+			return ret;
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * @return an html packer focused on the first child element
+	 */
+	public HtmlPacker selectFirstChild() {
+		if (rootElement==null) return this;
+		for (Node child=rootElement.getFirstChild(); child!=null; child=child.getNextSibling()) {
+			if (child.getNodeType()==Node.ELEMENT_NODE) {
+				return copyWith((Element) child);
+			}
+		}
+		
+		// Not found
+		return copyWith(null);
 	}
 	
 	/**
@@ -65,7 +106,143 @@ public class HtmlPacker {
 	 * @return result
 	 */
 	public CharSequence pack() {
-		return null;
+		if (rootElement==null) return "[]";
+		
+		StringBuilder out=new StringBuilder();
+		packElement(rootElement, out);
+		
+		return out;
+	}
+	
+	private void packElement(Element element, StringBuilder out) {
+		out.append('[');
+		out.append(stringLiteral(elementName(element)));
+		
+		// Now collect the attributes
+		NamedNodeMap attrs=element.getAttributes();
+		for (int i=0; i<attrs.getLength(); i++) {
+			Attr attr=(Attr) attrs.item(i);
+			// Skip namespaced attrs
+			if (attr.getNamespaceURI()!=null) continue;
+			
+			String name=attr.getName();
+			// If one of our special names, ignore
+			if (name.equalsIgnoreCase(idAttribute) || name.equalsIgnoreCase(cssClassAttribute))
+				continue;
+			
+			// Otherwise, output it
+			out.append(',');
+			out.append(stringLiteral('@' + name));
+			out.append(',');
+			out.append(stringLiteral(attr.getValue()));
+		}
+		
+		// And finally the content
+		boolean normalizeSpacing=shouldNormalize(element);
+		boolean trailingSpace=false;
+		for (Node child=element.getFirstChild(); child!=null; child=child.getNextSibling()) {
+			switch (child.getNodeType()) {
+			case Node.ELEMENT_NODE:
+				// Process recursively
+				if (trailingSpace) {
+					out.append(",0");	// Emit a single space shortcut
+					trailingSpace=false;
+				}
+				out.append(',');
+				packElement((Element) child, out);
+				break;
+				
+			case Node.TEXT_NODE:
+			case Node.CDATA_SECTION_NODE:
+				// Process text
+				// If the text node only contains whitespace, then we deal with this separately by setting
+				// a flag so that it gets appended before the next child or the close
+				String textValue=child.getNodeValue();
+				if (!normalizeSpacing) {
+					// The element wants spacing preserved, so output it verbatim
+					out.append(',');
+					out.append(stringLiteral(child.getNodeValue()));
+				} else {
+					textValue=normalizeSpacing(textValue);
+					if (isWhitespace(textValue)) {
+						trailingSpace=true;
+					} else {
+						// Write it out
+						if (trailingSpace) {
+							// If trailing space, tack one onto the beginning
+							textValue=' ' + textValue;
+							trailingSpace=false;
+						}
+						out.append(',');
+						out.append(stringLiteral(textValue));
+					}
+				}
+				break;
+				
+			case Node.COMMENT_NODE:
+			case Node.PROCESSING_INSTRUCTION_NODE:
+				// Explicit ignore
+				continue;
+				
+			default:
+				throw new IllegalStateException("Unexpected node type " + child.getNodeType());
+			}
+		}
+		
+		// Handle any trailing space
+		if (trailingSpace) {
+			out.append(",0");
+			trailingSpace=false;
+		}
+		
+		out.append(']');
+	}
+	
+	private static final Pattern SPACE_PATTERN=Pattern.compile("\\s+", Pattern.MULTILINE);
+	private boolean isWhitespace(String textValue) {
+		return SPACE_PATTERN.matcher(textValue).matches();
+	}
+	
+	private String normalizeSpacing(String textValue) {
+		return textValue;
+	}
+
+	private boolean shouldNormalize(Element element) {
+		return true;
+	}
+
+	private CharSequence stringLiteral(CharSequence in) {
+		return '\'' + StringEscapeUtils.ESCAPE_ECMASCRIPT.translate(in) + '\'';
+	}
+	
+	private CharSequence elementName(Element element) {
+		StringBuilder name=new StringBuilder();
+		name.append(element.getTagName());
+		
+		// Process id attribute
+		if (idAttribute!=null) {
+			Attr attr=element.getAttributeNode(idAttribute);
+			if (attr!=null) {
+				name.append('#');
+				name.append(attr.getValue());
+			}
+		}
+		
+		// Process css class
+		if (cssClassAttribute!=null) {
+			Attr attr=element.getAttributeNode(cssClassAttribute);
+			if (attr!=null) {
+				// Split the css class
+				String[] classNames=CLASSSPLIT.split(attr.getValue());
+				for (String className: classNames) {
+					if (className.isEmpty()) continue;
+					name.append('.');
+					name.append(className);
+				}
+			}
+		}
+		
+		return name;
 	}
 	
 	/**
@@ -74,17 +251,80 @@ public class HtmlPacker {
 	 * @return
 	 * @throws Exception
 	 */
+	/*
 	public static HtmlPacker parse(InputSource source) throws Exception {
 		XMLReader parser=new Parser();
 		parser.setFeature(Parser.namespacesFeature, false);
 		parser.setFeature(Parser.namespacePrefixesFeature, false);
+		parser.setFeature(Parser.CDATAElementsFeature, true);
 		
 		Transformer transformer=TransformerFactory.newInstance().newTransformer();
 		
 		DOMResult result=new DOMResult();
 		transformer.transform(new SAXSource(parser, source), result);
 		Node node=result.getNode();
+		Element element;
+		if (node instanceof Element) element=(Element) node;
+		else if (node instanceof Document) {
+			element=((Document)node).getDocumentElement();
+			
+			// Find the body.  tagsoup always produces a full html tree
+			NodeList nl=element.getElementsByTagName("body");
+			if (nl.getLength()>0) {
+				element=(Element) nl.item(0);
+			}
+		} else {
+			throw new IllegalStateException();
+		}
 		
-		return new HtmlPacker((Element) node);
+		return new HtmlPacker(element);
+	}
+	*/
+	public static void initSettings() {
+		if (htmlcleanerTagInfo==null) {
+			htmlcleanerTagInfo=new ConfigFileTagProvider(HtmlPacker.class.getResource("htmlcleaner-tags.xml"));
+		}
+	}
+	
+	public static HtmlPacker parse(InputSource source) throws Exception {
+		initSettings();
+		
+		HtmlCleaner cleaner=new HtmlCleaner(htmlcleanerTagInfo);
+		TagNode rootNode;
+		if (source.getCharacterStream()!=null) {
+			rootNode=cleaner.clean(source.getCharacterStream());
+		} else {
+			throw new IllegalStateException("InputSource not supported");
+		}
+		
+		DomSerializer s=new DomSerializer(cleaner.getProperties());
+		Node node=s.createDOM(rootNode);
+		dumpDom(node);
+		
+		Element element;
+		if (node instanceof Element) element=(Element) node;
+		else if (node instanceof Document) {
+			element=((Document)node).getDocumentElement();
+			
+			// Find the body.  tagsoup always produces a full html tree
+			NodeList nl=element.getElementsByTagName("body");
+			if (nl.getLength()>0) {
+				element=(Element) nl.item(0);
+			}
+		} else {
+			throw new IllegalStateException();
+		}
+
+		return new HtmlPacker(element);
+	}
+
+	private static void dumpDom(Node domDoc) throws Exception {
+		StringWriter writer=new StringWriter();
+		StreamResult result=new StreamResult(writer);
+		DOMSource source=new DOMSource(domDoc);
+		TransformerFactory.newInstance().newTransformer().transform(source, result);
+		
+		String xml=writer.toString();
+		System.err.println(xml);
 	}
 }

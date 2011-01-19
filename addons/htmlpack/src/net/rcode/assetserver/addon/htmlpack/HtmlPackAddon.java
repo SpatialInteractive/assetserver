@@ -28,6 +28,9 @@ public class HtmlPackAddon implements Addon {
 
 	@Override
 	public void configure(AssetServer server) {
+		// Init static stuff now
+		HtmlPacker.initSettings();
+		
 		// Add the htmlpack host object
 		EjsRuntime jsRuntime = server.getJavascriptRuntime();
 		Scriptable hostObjects=jsRuntime.getHostObjects();
