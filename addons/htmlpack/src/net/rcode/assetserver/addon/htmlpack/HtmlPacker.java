@@ -172,6 +172,9 @@ public class HtmlPacker implements Cloneable {
 							// If trailing space, tack one onto the beginning
 							textValue=' ' + textValue;
 							trailingSpace=false;
+						} else if (textValue.startsWith("@")) {
+							// Escape leading at sign
+							textValue='@' + textValue;
 						}
 						out.append(',');
 						out.append(stringLiteral(textValue));
