@@ -2,12 +2,80 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<script src='unpack.js'></script>
+	<script>
+		var packedButton=#{htmlpack('widgets.html', 'labeledButton')},
+			packedCheckbox=#{htmlpack('widgets.html', 'labeledCheckbox')};
+		
+		var curColor=0, colors=['red', 'green', 'blue'];
+		
+		function nextColor() {
+			curColor++;
+			if (curColor>=colors.length) curColor=0;
+			return colors[curColor];
+		}
+		
+		function createButton(label, callback) {
+			var ctx=unpackHtml(packedButton, interpolator({label:label}));
+			ctx.b.addEventListener('click', callback, false);
+			
+			document.body.appendChild(ctx.root);
+		}
+		
+		function createCheckbox(label, callback) {
+			var ctx=unpackHtml(packedCheckbox, interpolator({label:label}));
+			function labelHandler() {
+				ctx.cb.click();
+			}
+			
+			ctx.cb.addEventListener('change', callback, false);
+			ctx.l.addEventListener('click', labelHandler, false);
+			
+			document.body.appendChild(ctx.root);
+		}
+		
+		function init() {
+			createButton('Change Color:', function() {
+				var color=nextColor();
+				document.body.style.backgroundColor=color;
+			});
+			
+			createCheckbox('Show Text', function() {
+				var v=this.checked ? 'visible': 'hidden';
+				document.getElementById('text').style.visibility=v;
+			});
+		}
+	</script>
+	
+	<style>
+	.lbutton {
+		border: 1px solid black;
+		display: inline;
+		padding: 18px;
+		margin: 18px;
+		background-color: gray;
+	}
+	
+	.lcheck {
+		border: 1px solid black;
+		display: inline;
+		padding: 18px;
+		margin: 18px;
+		background-color: gray;
+	}
+	.lcheck span {
+		cursor: default;
+	}
+	#text {
+		visibility: hidden;
+	}
+	</style>
 </head>
-<body>
-<pre>
-	#{htmlpack('widgets.html', 'labeledButton')}
-	#{htmlpack('widgets.html', 'labeledCheckbox')}
-</pre>
+<body onload='init()'>
+<div id="text">
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+</div>
+
 </body>
 </html>
 
