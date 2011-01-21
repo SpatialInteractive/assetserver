@@ -29,6 +29,8 @@ public class YuiOptimizeJsResourceFilter extends ResourceFilter {
 	@Override
 	public AssetLocator filter(FilterChain context, AssetLocator source)
 			throws Exception {
+		if (context.getServer().isGlobalDisableOptimization()) return source;
+		
 		String encoding=source.getCharacterEncoding();
 		if (encoding==null) encoding="UTF-8";
 		Reader input=new BufferedReader(new InputStreamReader(source.openInput(), encoding));

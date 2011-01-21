@@ -31,6 +31,7 @@ public class ServeCommand extends MainCommand {
 			.withOptionalArg();
 		optionParser.accepts("clear-cache", "Clear the cache prior to starting");
 		optionParser.accepts("no-cache", "Disable the cache");
+		optionParser.accepts("disable-optimization", "Disable optimization filters");
 	}
 	
 	@Override
@@ -85,6 +86,9 @@ public class ServeCommand extends MainCommand {
 			}
 		}
 		
+		if (optionSet.has("disable-optimization")) {
+			server.setGlobalDisableOptimization(true);
+		}
 		
 		AssetServer.logger.info("Configuration summary:\n" + server.summarizeConfiguration());
 		

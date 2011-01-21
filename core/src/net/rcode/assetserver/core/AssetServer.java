@@ -42,6 +42,7 @@ public class AssetServer {
 	private Cache sharedCache;
 	private AddonManager addonManager;
 	private FilterChainInitializerLookup filterLookup;
+	private boolean globalDisableOptimization;
 	
 	private ServerConfig config;
 	
@@ -140,6 +141,13 @@ public class AssetServer {
 		return contextManager;
 	}
 	
+	public void setGlobalDisableOptimization(boolean globalDisableOptimization) {
+		this.globalDisableOptimization = globalDisableOptimization;
+	}
+	
+	public boolean isGlobalDisableOptimization() {
+		return globalDisableOptimization;
+	}
 	
 	/**
 	 * The location of the shared cache or null if no caching.  The default will be the
