@@ -141,6 +141,8 @@ public class EjsParser {
 	private int lineNumber;
 	private StringBuilder buffer;
 	
+	private boolean identity=true;
+	
 	/**
 	 * Matches a "top-level" command (EJSON or EJSDISABLE) that can be
 	 * encountered when the parser is in a disabled state.
@@ -280,6 +282,10 @@ public class EjsParser {
 		return start;
 	}
 	
+	public boolean isIdentity() {
+		return identity;
+	}
+	
 	/**
 	 * Initiate a parse of the given CharSequence
 	 * @param source
@@ -306,6 +312,7 @@ public class EjsParser {
 			
 			matcher.usePattern(P_COMMANDTOP);
 			if (matcher.find(position)) {
+				identity=false;
 				// Found a sequence
 				boolean isEscape=matcher.start(1)<matcher.end(1);
 				String command=matcher.group(2);

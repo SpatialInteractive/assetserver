@@ -61,6 +61,12 @@ public class EjsResourceFilter extends ResourceFilter {
 			ScriptableObject.putProperty(runtime, "requestContext", RequestContext.getInstance());
 			
 			Function template=compiler.compileTemplate(scope, templateIn, context.getRootFile().toString());
+			
+			// If it was just an identity transform, skip extra work and just return the source
+			if (!compiler.wasNonIdentity()) {
+				return source;
+			}
+			
 			Function appendableWrite=instance.createAppendableAdapter(out);
 			
 			ScriptableObject.putProperty(runtime, "rawWrite", appendableWrite);

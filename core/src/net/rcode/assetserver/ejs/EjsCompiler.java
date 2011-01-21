@@ -22,6 +22,7 @@ import org.mozilla.javascript.ScriptableObject;
  */
 public class EjsCompiler {
 	private EjsRuntime runtime;
+	private boolean nonIdentity;
 	
 	public EjsCompiler(EjsRuntime runtime) {
 		this.runtime=runtime;
@@ -29,6 +30,14 @@ public class EjsCompiler {
 	
 	public EjsRuntime getRuntime() {
 		return runtime;
+	}
+	
+	/**
+	 * 
+	 * @return true if any compilations have produced a non-identity transform
+	 */
+	public boolean wasNonIdentity() {
+		return nonIdentity;
 	}
 	
 	/**
@@ -106,6 +115,9 @@ public class EjsCompiler {
 			
 			EjsParser parser=new EjsParser(events);
 			parser.parse(source);
+			if (!parser.isIdentity()) {
+				nonIdentity=true;
+			}
 			
 			// Call the evaluator generator with the fragments to get the generator
 			//return (Function) evaluatorFunction.call(cx, scope, null, new Object[] { fragments });
