@@ -105,9 +105,11 @@ public class YuiCompressor {
 				// Do nothing
 				return null;
 			} else if ("error".equals(methodName)) {
+				// Reformat the message to ensure we keep the source info)
+				String msg=(String)args[0] + " (line " + args[2] + ", col " + args[4] + ": '" + args[3] + "')";
 				// Raise our own excpetion (from this classloader)
 				throw new EvaluatorException(
-						(String)args[0],
+						msg,
 						(String)args[1],
 						((Integer)args[2]).intValue(),
 						(String)args[3],

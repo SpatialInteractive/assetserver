@@ -1,7 +1,6 @@
 package net.rcode.assetserver.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -42,7 +41,7 @@ public class YuiCompressorTest {
 			compressor.compressJs(new StringReader(src), out);
 			fail("Expected exception");
 		} catch (EvaluatorException e) {
-			assertEquals("unterminated string literal", e.getMessage());
+			assertTrue(e.getMessage().startsWith("unterminated string literal (line 1"));
 		}
 	}
 }

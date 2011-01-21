@@ -41,16 +41,17 @@ public class BlockInputStream extends InputStream {
 	public int read(byte[] b, int off, int len) throws IOException {
 		int blockIndex=(int)(position / blockSize);
 		int blockPos=(int)(position % blockSize);
-		if (blockIndex>=blocks.length || blockPos>=lastLength) return -1;
+		boolean lastBlock=(blockIndex==(blocks.length-1));
+		if (blockIndex>=blocks.length || (lastBlock && blockPos>=lastLength)) return -1;
 		
 		byte[] block=blocks[(int)blockIndex];
 		int remain;
-		if (blockIndex<(blocks.length-1)) {
-			// Before last block
-			remain=blockSize-blockPos;
-		} else {
+		if (lastBlock) {
 			// Last block
 			remain=lastLength-blockPos;
+		} else {
+			// Before last block
+			remain=blockSize-blockPos;
 		}
 		
 		if (remain>len) remain=len;
