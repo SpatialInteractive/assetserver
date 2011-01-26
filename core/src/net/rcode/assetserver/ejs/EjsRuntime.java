@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Field;
+import java.util.concurrent.Callable;
 
 import net.rcode.assetserver.util.GenericScriptException;
 
@@ -30,6 +32,53 @@ public class EjsRuntime {
 	private boolean useDynamicScope;
 	private LocalFactory contextFactory=new LocalFactory();
 	
+	// HACK ALERT: We need the ability to do nested top calls.
+	// Rhino doesn't provide this, so we have to access some package private
+	// fields to make it work
+	/**
+	 * Fields on Context that should be preserved/reset to null to do a nested
+	 * top call
+	 */
+	private Field[] topCallContextPreserve;
+	
+	private Field accessPrivateField(Class t, String name) {
+		for (Field f: t.getDeclaredFields()) {
+			if (name.equals(f.getName())) {
+				f.setAccessible(true);
+				return f;
+			}
+		}
+		
+		throw new IllegalStateException("Field not found " + name);
+	}
+	
+	private void initReflectionBits() {
+		// Look at ScriptRuntime.doTopCall to figure out what gets set an reset
+		topCallContextPreserve=new Field[] {
+			accessPrivateField(Context.class, "topCallScope"),
+			accessPrivateField(Context.class, "cachedXMLLib"),
+			accessPrivateField(Context.class, "currentActivationCall")
+		};
+	}
+	
+	public <T> T doNestedTopCall(Context cx, Callable<T> callable) throws Exception {
+		// Preserve fields
+		Object[] values=new Object[topCallContextPreserve.length];
+		for (int i=0; i<values.length; i++) {
+			Field f=topCallContextPreserve[i];
+			values[i]=f.get(cx);
+			f.set(cx, null);
+		}
+		try {
+			return callable.call();
+		} finally {
+			// Put 'em back
+			for (int i=0; i<values.length; i++) {
+				topCallContextPreserve[i].set(cx, values[i]);
+			}
+		}
+	}
+	
 	private class LocalFactory extends ContextFactory {
 		@Override
 		protected boolean hasFeature(Context cx, int featureIndex) {
@@ -40,6 +89,7 @@ public class EjsRuntime {
 			}
 			return super.hasFeature(cx, featureIndex);
 		}
+		
 	}
 	
 	public class Instance {
@@ -93,6 +143,8 @@ public class EjsRuntime {
 	}
 	
 	EjsRuntime(boolean seal) {
+		initReflectionBits();
+		
 		useDynamicScope=true;
 		Context cx=enter();
 		try {

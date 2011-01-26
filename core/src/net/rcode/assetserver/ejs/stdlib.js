@@ -53,6 +53,9 @@ global.read=function(resourceName, options) {
 	var relativeTo=PathUtil.dirname(runtime.filterChain.assetPath.fullPath),
 		normalizedPath=PathUtil.normalizePath(relativeTo, resourceName);
 
+	//logger.info('read: from=' + runtime.filterChain.assetPath.fullPath + ', relativeTo=' + relativeTo + ', normalizedPath=' + normalizedPath);
+	//logger.info('whereami=' + whereami);
+	
 	// Get the locator
 	var locator=runtime.server.root.resolve(normalizedPath);
 	if (!locator) {

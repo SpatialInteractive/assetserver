@@ -3,6 +3,7 @@ package net.rcode.assetserver.ejs;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.util.concurrent.Callable;
 
 import net.rcode.assetserver.core.AssetLocator;
 import net.rcode.assetserver.core.BufferAssetLocator;
@@ -18,6 +19,8 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implement the JavaScript Embedded preprocessor against text-based resources.
@@ -31,14 +34,32 @@ import org.mozilla.javascript.ScriptableObject;
  *
  */
 public class EjsResourceFilter extends ResourceFilter {
+	private static final Logger logger=LoggerFactory.getLogger("ejs");
+	
 	public EjsResourceFilter() {
 		super("ejs");
 	}
 
 	@Override
-	public AssetLocator filter(FilterChain context, AssetLocator source)
+	public AssetLocator filter(final FilterChain context, final AssetLocator source)
 			throws Exception {
 		final EjsRuntime ejsRuntime=context.getServer().getJavascriptRuntime();
+		final Context cx=ejsRuntime.enter();
+		try {
+			return ejsRuntime.doNestedTopCall(cx, new Callable<AssetLocator>() {
+				@Override
+				public AssetLocator call() throws Exception {
+					return filterInTopCall(ejsRuntime, cx, context, source);
+				}
+			});
+		} catch (Exception e) {
+			throw GenericScriptException.translateException(e);
+		} finally {
+			Context.exit();
+		}
+	}
+	
+	private AssetLocator filterInTopCall(EjsRuntime ejsRuntime, Context cx, FilterChain context, AssetLocator source) throws Exception {
 		EjsCompiler compiler=new EjsCompiler(ejsRuntime);
 		EjsRuntime.Instance instance=ejsRuntime.createInstance();
 		
@@ -49,38 +70,34 @@ public class EjsResourceFilter extends ResourceFilter {
 		BlockOutputStream outBuffer=new BlockOutputStream();
 		OutputStreamWriter out=new OutputStreamWriter(outBuffer, encoding);
 		
-		Context cx=ejsRuntime.enter();
-		try {
-			// Establish globals
-			Scriptable scope=instance.getScope();
-			
-			Scriptable runtime=cx.newObject(scope);
-			ScriptableObject.putProperty(scope, "runtime", runtime);
-			
-			ScriptableObject.putProperty(runtime, "filterChain", context);
-			ScriptableObject.putProperty(runtime, "server", context.getServer());
-			ScriptableObject.putProperty(runtime, "requestContext", RequestContext.getInstance());
-			
-			Function template=compiler.compileTemplate(scope, templateIn, context.getRootFile().toString());
-			
-			// If it was just an identity transform, skip extra work and just return the source
-			if (!compiler.wasNonIdentity()) {
-				return source;
-			}
-			
-			Function appendableWrite=instance.createAppendableAdapter(out);
-			
-			ScriptableObject.putProperty(runtime, "rawWrite", appendableWrite);
-			ScriptableObject.putProperty(scope, "params",
-					new RhinoUtil.MapScriptable(context.getAssetPath().getParameters(), scope));
-			
-			template.call(cx, scope, null, new Object[] { appendableWrite });
-			out.flush();
-		} catch (Exception e) {
-			throw GenericScriptException.translateException(e);
-		} finally {
-			ejsRuntime.exit();
+		//logger.info("source: " + source + ", context=" + context.getAssetPath());
+		
+		// Establish globals
+		Scriptable scope=instance.getScope();
+		
+		ScriptableObject.putProperty(scope, "whereami", "source: " + source + ", context=" + context.getAssetPath());
+		Scriptable runtime=cx.newObject(scope);
+		ScriptableObject.putProperty(scope, "runtime", runtime);
+		
+		ScriptableObject.putProperty(runtime, "filterChain", context);
+		ScriptableObject.putProperty(runtime, "server", context.getServer());
+		ScriptableObject.putProperty(runtime, "requestContext", RequestContext.getInstance());
+		
+		Function template=compiler.compileTemplate(scope, templateIn, context.getRootFile().toString());
+		
+		// If it was just an identity transform, skip extra work and just return the source
+		if (!compiler.wasNonIdentity()) {
+			return source;
 		}
+		
+		Function appendableWrite=instance.createAppendableAdapter(out);
+		
+		ScriptableObject.putProperty(runtime, "rawWrite", appendableWrite);
+		ScriptableObject.putProperty(scope, "params",
+				new RhinoUtil.MapScriptable(context.getAssetPath().getParameters(), scope));
+		
+		template.call(cx, scope, null, new Object[] { appendableWrite });
+		out.flush();
 		
 		// Return the locator
 		BufferAssetLocator ret=new BufferAssetLocator(outBuffer);
