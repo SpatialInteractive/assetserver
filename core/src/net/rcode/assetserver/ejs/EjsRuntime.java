@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
+import net.rcode.assetserver.util.GenericScriptException;
+
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Function;
@@ -134,7 +136,7 @@ public class EjsRuntime {
 		return Context.javaToJS(java, sharedScope);
 	}
 	
-	public void loadLibrary(Reader source, String name) {
+	public void loadLibrary(Reader source, String name) throws Exception {
 		try {
 			Context cx=enter();
 			//useDynamicScope=true;
@@ -147,14 +149,16 @@ public class EjsRuntime {
 			}
 		} catch (IOException e) {
 			throw new RuntimeException("IO error loading library " + name, e);
+		} catch (Exception e) {
+			throw GenericScriptException.translateException(e);
 		}
 	}
 	
-	public void loadLibraryStd() {
+	public void loadLibraryStd() throws Exception {
 		loadLibrary(getClass(), "stdlib.js");
 	}
 	
-	public void loadLibrary(Class<?> relativeTo, String resourceName) {
+	public void loadLibrary(Class<?> relativeTo, String resourceName) throws Exception {
 		try {
 			InputStream in=relativeTo.getResourceAsStream(resourceName);
 			if (in==null) {

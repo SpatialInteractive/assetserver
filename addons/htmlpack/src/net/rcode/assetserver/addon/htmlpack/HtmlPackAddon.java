@@ -27,7 +27,7 @@ public class HtmlPackAddon implements Addon {
 	}
 
 	@Override
-	public void configure(AssetServer server) {
+	public void configure(AssetServer server) throws Exception {
 		// Init static stuff now
 		HtmlPacker.initSettings();
 		

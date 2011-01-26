@@ -10,6 +10,7 @@ import net.rcode.assetserver.core.FilterChain;
 import net.rcode.assetserver.core.RequestContext;
 import net.rcode.assetserver.core.ResourceFilter;
 import net.rcode.assetserver.util.BlockOutputStream;
+import net.rcode.assetserver.util.GenericScriptException;
 import net.rcode.assetserver.util.IOUtil;
 import net.rcode.assetserver.util.RhinoUtil;
 
@@ -75,6 +76,8 @@ public class EjsResourceFilter extends ResourceFilter {
 			
 			template.call(cx, scope, null, new Object[] { appendableWrite });
 			out.flush();
+		} catch (Exception e) {
+			throw GenericScriptException.translateException(e);
 		} finally {
 			ejsRuntime.exit();
 		}

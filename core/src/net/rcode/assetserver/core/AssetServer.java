@@ -46,7 +46,7 @@ public class AssetServer {
 	
 	private ServerConfig config;
 	
-	public AssetServer(File location) throws IllegalArgumentException, IOException {
+	public AssetServer(File location) throws Exception {
 		this.config=new ServerConfig();
 		
 		this.javascriptRuntime=new EjsRuntime();
@@ -238,7 +238,7 @@ public class AssetServer {
 		}
 	}
 
-	private void initializeJavaScriptRuntime() {
+	private void initializeJavaScriptRuntime() throws Exception {
 		javascriptRuntime.loadLibraryStd();
 	}
 	

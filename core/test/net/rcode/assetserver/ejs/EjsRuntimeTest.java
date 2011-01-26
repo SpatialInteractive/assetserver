@@ -58,7 +58,7 @@ public class EjsRuntimeTest {
 	}
 	
 	@Test
-	public void testStdLib() {
+	public void testStdLib() throws Exception {
 		EjsRuntime runtime=new EjsRuntime();
 		runtime.loadLibraryStd();
 		

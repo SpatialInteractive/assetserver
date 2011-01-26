@@ -131,8 +131,7 @@ public class RhinoUtil {
 		@Override
 		public boolean hasInstance(Scriptable instance) {
 			return false;
-		}
-		
+		}	
 	}
 	
 }

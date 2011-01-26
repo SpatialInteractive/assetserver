@@ -9,5 +9,5 @@ import net.rcode.assetserver.core.AssetServer;
  */
 public interface Addon {
 	public String getAddonName();
-	public void configure(AssetServer server);
+	public void configure(AssetServer server) throws Exception;
 }
