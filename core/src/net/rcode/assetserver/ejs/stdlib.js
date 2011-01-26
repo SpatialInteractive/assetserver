@@ -23,6 +23,18 @@ String.prototype.toXml=function() {
 	return String(StringEscapeUtils.escapeXml(this));
 }
 
+/** Add to Object **/
+Object.copy=function(src, dest) {
+	if (!dest) dest={};
+	if (src) {
+		for (var k in src) {
+			if (src.hasOwnProperty(k))
+				dest[k]=src[k];
+		}
+	}
+	return dest;
+}
+
 /** Global IO functions **/
 
 /**
@@ -43,7 +55,12 @@ global.read=function(resourceName, options) {
 
 	// Get the locator
 	var locator=runtime.server.root.resolve(normalizedPath);
-	if (!locator) return null;
+	if (!locator) {
+		if (options.required) {
+			throw new Error('In call to read(...), the required resource ' + normalizedPath + ' was not found.');
+		}
+		return null;
+	}
 	
 	// Handle encoding
 	var encoding=options.encoding || locator.characterEncoding || 'UTF-8';

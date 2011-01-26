@@ -27,12 +27,9 @@ function htmlpackString(htmlText, locator, options, sourceName) {
  * Pack a resource.
  */
 function htmlpack(resourceName, locator, options) {
-	if (!options) options={};
+	options=Object.copy(options, { required: true });
 	
 	var contents=read(resourceName, options);
-	if (contents===null || contents===undefined) {
-		throw new Error('In call to htmlpack(...), the resource ' + resourceName + ' was not found');
-	}
 	return htmlpackString(contents, locator, options, resourceName);
 };
 
