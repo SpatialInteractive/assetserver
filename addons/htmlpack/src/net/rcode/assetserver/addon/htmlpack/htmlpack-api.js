@@ -6,7 +6,10 @@
 function htmlpackString(htmlText, locator, options, sourceName) {
 	if (!options) options={};
 	
-	var packer=hostobjects.htmlpack.createPacker(htmlText);
+	if (htmlText===null || htmlText===undefined) {
+		throw new Error('In call to htmlpackString(...), htmlText cannot be null or undefined');
+	}
+	var packer=hostobjects.htmlpack.createPacker(String(htmlText));
 	if (!locator) {
 		packer=packer.selectFirstChild();
 	} else {
@@ -27,6 +30,9 @@ function htmlpack(resourceName, locator, options) {
 	if (!options) options={};
 	
 	var contents=read(resourceName, options);
+	if (contents===null || contents===undefined) {
+		throw new Error('In call to htmlpack(...), the resource ' + resourceName + ' was not found');
+	}
 	return htmlpackString(contents, locator, options, resourceName);
 };
 
