@@ -12,7 +12,7 @@
  * this notice in source code (not necessarily code delivered to a user
  * agent).
  */
-function unpackHtml(packed, interpolator, options) {
+function unpackhtml(packed, interpolator, options) {
 	if (!options) options={};
 	var context={}, d=options.document||document;
 	
@@ -73,7 +73,7 @@ function unpackHtml(packed, interpolator, options) {
  * is undefined, the substitution pattern is preserved.  If null, then an empty
  * string is replaced.
  */
-function interpolator(dict) {
+function interp(dict) {
 	return function(s) {
 		return s.replace(/(\$)?\$\{([^\}]*)\}/gm, function(ss, esc, token) {
 			if (esc) return ss.substring(1);
@@ -84,4 +84,5 @@ function interpolator(dict) {
 		});
 	};
 }
+
 

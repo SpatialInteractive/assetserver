@@ -16,14 +16,14 @@
 		}
 		
 		function createButton(label, callback) {
-			var ctx=unpackHtml(packedButton, interpolator({label:label}));
+			var ctx=unpackhtml(packedButton, interp({label:label}));
 			ctx.b.addEventListener('click', callback, false);
 			
 			document.body.appendChild(ctx.root);
 		}
 		
 		function createCheckbox(label, callback) {
-			var ctx=unpackHtml(packedCheckbox, interpolator({label:label}));
+			var ctx=unpackhtml(packedCheckbox, interp({label:label}));
 			function labelHandler() {
 				ctx.cb.click();
 			}
