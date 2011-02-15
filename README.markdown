@@ -14,4 +14,9 @@ The quick start on the website is more complete, but to see something in one ste
 
 and point your browser at http://localhost:4080/test.html
 
+Integrations
+------------
+
+   * node.js: https://gist.github.com/828185
+
 Enjoy!
