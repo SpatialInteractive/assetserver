@@ -32,6 +32,8 @@ public class CopyCommand extends MainCommand {
 	public CopyCommand() {
 		optionParser=new OptionParser();
 		optionParser.posixlyCorrect(true);
+		
+		optionParser.accepts("disable-optimization", "Disable optimization filters");
 	}
 	
 	@Override
@@ -70,6 +72,10 @@ public class CopyCommand extends MainCommand {
 		// Boot up the server
 		File configLocation=new File(serverRoot);
 		final AssetServer server=new AssetServer(configLocation);
+		
+		if (optionSet.has("disable-optimization")) {
+			server.setGlobalDisableOptimization(true);
+		}
 		
 		// Disable the cache
 		server.setSharedCache(new NullCache());
