@@ -190,7 +190,7 @@ build.version=${build.version}
 		</jar>
 		
 		<!-- Create the executable -->
-		<jar destfile="${build.jar.dir}/assetserver-main.jar" index="true" indexMetaInf="true">
+		<jar destfile="${build.jar.dir}/assetserver-main.jar" index="true">
 			<manifest>
 				<attribute name="Main-Class" value="net.rcode.cphelp.Main"/>
 			</manifest>

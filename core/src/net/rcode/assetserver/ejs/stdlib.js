@@ -116,6 +116,18 @@ global.include=function(resourceName, options) {
 };
 
 /**
+ * Load a resource as a script
+ */
+global.load=function(resourceName, options) {
+	var contents=global.read(resourceName, options);
+	if (contents===null) {
+		throw new Error('In call to load(...), ' + resourceName + ' could not be found.');
+	}
+	
+	runtime.ejs.evaluate(contents, resourceName);
+};
+
+/**
  * Return the full absolute path of the resource requested by the client
  */
 global.requestedPath=function() {

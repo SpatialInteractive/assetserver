@@ -82,6 +82,7 @@ public class EjsResourceFilter extends ResourceFilter {
 		ScriptableObject.putProperty(runtime, "filterChain", context);
 		ScriptableObject.putProperty(runtime, "server", context.getServer());
 		ScriptableObject.putProperty(runtime, "requestContext", RequestContext.getInstance());
+		ScriptableObject.putProperty(runtime, "ejs", instance);
 		
 		Function template=compiler.compileTemplate(scope, templateIn, context.getRootFile().toString());
 		

@@ -86,6 +86,8 @@ public class EjsRuntime {
 				return useDynamicScope;
 			} else if (featureIndex == Context.FEATURE_LOCATION_INFORMATION_IN_ERROR) {
 				return true;
+			} else if (featureIndex == Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER) {
+				return true;
 			}
 			return super.hasFeature(cx, featureIndex);
 		}
@@ -103,13 +105,17 @@ public class EjsRuntime {
 			return scope;
 		}
 		
-		public Object evaluate(String source) {
+		public Object evaluate(String source, String name) {
 			Context cx=enter();
 			try {
-				return cx.evaluateString(scope, source, null, 1, null);
+				return cx.evaluateString(scope, source, name, 1, null);
 			} finally {
 				exit();
 			}
+		}
+		
+		public Object evaluate(String source) {
+			return evaluate(source, null);
 		}
 		
 		/**

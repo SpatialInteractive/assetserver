@@ -79,7 +79,9 @@ public class BlockOutputStream extends OutputStream implements BufferAccessor {
 
 	@Override
 	public InputStream openInput() {
-		return new BlockInputStream(blocks.toArray(new byte[blocks.size()][]), blockSize, curPos);
+		return new BlockInputStream(blocks.toArray(new byte[blocks.size()][]), 
+				blockSize, 
+				curBlock==null && !blocks.isEmpty()? blockSize : curPos);
 	}
 
 	@Override
