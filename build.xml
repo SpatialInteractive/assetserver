@@ -183,7 +183,17 @@ build.version=${build.version}
 		</junit>
 	</target>
 	
-	<target name="jar" depends="compile,test,-init-tools">
+	<target name="jar-embed" depends="compile">
+		<jar destfile="${build.jar.dir}/assetserver-embed.jar">
+			<fileset dir="${build.core.classes}">
+				<exclude name="net/rcode/assetserver/standalone/**"/>
+			</fileset>
+			<fileset dir="${build.cphelp.classes}"/>
+			<zipfileset prefix="lib/yuicompressor" src="lib/core/yuicompressor-2.4.2.jar"/>
+		</jar>
+	</target>
+	
+	<target name="jar" depends="compile,jar-embed,-init-tools">
 		<!-- Create just this library -->
 		<jar destfile="${build.jar.dir}/assetserver-core.jar">
 			<fileset dir="${build.core.classes}"/>
@@ -222,7 +232,7 @@ build.version=${build.version}
 	
 	<!-- Create a build/dist directory with the full distribution contents.  Then create
 	     zip and tarballs for different platforms by applying excludes -->
-	<target name="dist" depends="clean,all">
+	<target name="dist" depends="clean,test,all">
 		<property name="dist.basename" value="assetserver-${build.version}"/>
 		<property name="dist.parent.dir" location="${build.dir}/dist"/>
 		<property name="dist.dir" location="${dist.parent.dir}/${dist.basename}"/>

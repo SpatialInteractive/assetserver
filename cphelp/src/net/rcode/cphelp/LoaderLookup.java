@@ -3,7 +3,6 @@ package net.rcode.cphelp;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -60,6 +59,14 @@ public class LoaderLookup {
 			INSTANCE=new LoaderLookup(loadProperties(LOADER_RESOURCE));
 		}
 		return INSTANCE;
+	}
+	
+	public static synchronized boolean isInitialized() {
+		return INSTANCE!=null;
+	}
+	
+	public static synchronized void initialize(Properties properties) {
+		INSTANCE=new LoaderLookup(properties);
 	}
 	
 	public LoaderLookup(Properties loaderProperties) {
