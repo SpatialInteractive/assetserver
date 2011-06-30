@@ -1,5 +1,3 @@
-See the project homepage at http://www.rcode.net/assetserver/ .
-
 This project is being used internally by the author and is evolving rapidly.  In order to build off of the repo, make sure you have Java 1.6+ and Ant 1.8+.  Then the following should get you going:
 
     git clone git://github.com/stellaeof/assetserver.git assetserver
